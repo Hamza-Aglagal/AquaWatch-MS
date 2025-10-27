@@ -140,6 +140,120 @@ git pull origin development
 docker compose up db_capteurs db_satellite db_predictions db_alerts db_geo redis_queue minio_storage -d
 ```
 
+## � WORKFLOW QUOTIDIEN SIMPLE
+
+### **🔨 PREMIÈRE FOIS - BUILD INFRASTRUCTURE**
+```powershell
+# 1. Aller dans le projet
+cd "C:\Users\Hamza\Documents\EMSI 5\ML+DM+MicroServices\aquawatch-ms"
+
+# 2. Basculer sur votre branche
+git checkout dev_hamza
+
+# 3. Build VOTRE service (une seule fois)
+docker compose build service_stmodel
+
+# 4. Build infrastructure COMPLÈTE (votre responsabilité)
+docker compose build
+```
+
+### **🚀 QUOTIDIEN - UP SERVICES SEULEMENT**
+
+#### **Démarrer votre travail** :
+```powershell
+# 1. Récupérer les dernières modifications
+git pull origin development
+
+# 2. Démarrer Docker Desktop (attendre qu'il soit vert)
+
+# 3. Démarrer infrastructure complète (VOTRE RESPONSABILITÉ)
+docker compose up db_capteurs db_satellite db_predictions db_alerts db_geo redis_queue minio_storage geoserver -d
+
+# 4. Développer VOTRE service (sans build)
+docker compose up service_stmodel
+# OU en mode détaché
+docker compose up service_stmodel -d
+```
+
+#### **Pendant développement** :
+```powershell
+# Modifier votre code dans services/service_stmodel/src/
+
+# Redémarrage rapide après modifications Python
+docker compose restart service_stmodel
+
+# Voir les logs en temps réel
+docker compose logs -f service_stmodel
+```
+
+#### **Quand rebuilder** :
+```powershell
+# REBUILD seulement si :
+# ✅ Vous modifiez requirements.txt (nouvelles dépendances Python)
+# ✅ Vous modifiez Dockerfile
+# ✅ Erreur "module not found" dans les logs
+
+# Rebuild votre service spécifique
+docker compose build service_stmodel
+docker compose up service_stmodel
+
+# Rebuild infrastructure complète (si gros changements)
+docker compose build --no-cache
+docker compose up
+```
+
+### **⚡ COMMANDES RAPIDES HAMZA**
+
+#### **Workflow développement ML** :
+```powershell
+# Démarrer environnement minimal
+docker compose up db_predictions redis_queue -d
+docker compose up service_stmodel -d
+
+# Tester API
+curl http://localhost:8003/health
+
+# Voir logs PyTorch
+docker compose logs -f service_stmodel
+
+# Redémarrer après modification code
+docker compose restart service_stmodel
+```
+
+#### **Workflow infrastructure complète** :
+```powershell
+# Test intégration tous services
+docker compose up --build
+
+# Monitoring infrastructure
+docker compose ps
+docker stats
+
+# Vérifier santé bases de données
+docker compose exec db_predictions psql -U predictions_user -d predictions_db -c "SELECT 1;"
+docker compose exec redis_queue redis-cli ping
+
+# Nettoyer si problème
+docker compose down -v
+docker system prune -f
+```
+
+#### **Workflow responsable infrastructure** :
+```powershell
+# Vérifier configuration
+docker compose config
+
+# Voir toutes les images
+docker images | grep aquawatch
+
+# Logs globaux
+docker compose logs
+
+# Redémarrer service spécifique d'un collègue
+docker compose restart service_capteurs
+docker compose restart service_alertes
+```
+
 ### **2. Développer votre service**
 ```powershell
 # Tester votre service STModel

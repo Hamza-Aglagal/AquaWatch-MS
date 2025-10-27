@@ -116,6 +116,101 @@ git pull origin development
 docker compose up db_capteurs db_satellite db_predictions db_alerts db_geo redis_queue minio_storage -d
 ```
 
+## � WORKFLOW QUOTIDIEN SIMPLE
+
+### **🔨 PREMIÈRE FOIS - BUILD VOS SERVICES**
+```powershell
+# 1. Aller dans le projet
+cd "C:\Users\Bilal\Documents\EMSI 5\ML+DM+MicroServices\aquawatch-ms"
+
+# 2. Basculer sur votre branche
+git checkout dev_bilal
+
+# 3. Build VOS services (une seule fois)
+docker compose build service_capteurs service_satellite
+
+# 4. Build infrastructure complète (première fois)
+docker compose build
+```
+
+### **🚀 QUOTIDIEN - UP SERVICES SEULEMENT**
+
+#### **Démarrer votre travail** :
+```powershell
+# 1. Récupérer les dernières modifications
+git pull origin development
+
+# 2. Démarrer Docker Desktop (attendre qu'il soit vert)
+
+# 3. Démarrer VOS bases + stockage (sans build)
+docker compose up db_capteurs db_satellite minio_storage redis_queue -d
+
+# 4. Développer un service spécifique (sans build)
+docker compose up service_capteurs    # Pour service capteurs
+# OU
+docker compose up service_satellite   # Pour service satellite
+```
+
+#### **Pendant développement** :
+```powershell
+# Modifier votre code dans services/service_capteurs/src/ ou services/service_satellite/src/
+
+# Redémarrage rapide après modifications
+docker compose restart service_capteurs
+
+# Voir les logs en temps réel
+docker compose logs -f service_capteurs
+```
+
+#### **Quand rebuilder** :
+```powershell
+# REBUILD seulement si :
+# ✅ Vous modifiez package.json (Node.js) ou requirements.txt (Python)
+# ✅ Vous modifiez Dockerfile
+# ✅ Erreur "module not found"
+
+# Rebuild votre service spécifique
+docker compose build service_capteurs
+docker compose up service_capteurs
+
+# OU
+docker compose build service_satellite  
+docker compose up service_satellite
+```
+
+### **⚡ COMMANDES RAPIDES BILAL**
+
+#### **Workflow service capteurs** :
+```powershell
+# Démarrer environnement capteurs
+docker compose up db_capteurs redis_queue -d
+docker compose up service_capteurs -d
+
+# Tester API
+curl http://localhost:8001/health
+
+# Debug
+docker compose logs -f service_capteurs
+docker compose restart service_capteurs
+```
+
+#### **Workflow service satellite** :
+```powershell
+# Démarrer environnement satellite  
+docker compose up db_satellite minio_storage redis_queue -d
+docker compose up service_satellite -d
+
+# Tester API
+curl http://localhost:8002/health
+
+# Vérifier MinIO
+# Ouvrir : http://localhost:9001 (admin/aquawatch123)
+
+# Debug
+docker compose logs -f service_satellite
+docker compose restart service_satellite
+```
+
 ### **2. Développer vos services**
 ```powershell
 # Service Capteurs (Node.js)

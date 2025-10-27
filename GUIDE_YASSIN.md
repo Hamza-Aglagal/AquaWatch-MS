@@ -156,6 +156,113 @@ git pull origin development
 docker compose up db_capteurs db_satellite db_predictions db_alerts db_geo redis_queue minio_storage -d
 ```
 
+## � WORKFLOW QUOTIDIEN SIMPLE
+
+### **🔨 PREMIÈRE FOIS - BUILD VOS SERVICES**
+```powershell
+# 1. Aller dans le projet
+cd "C:\Users\Yassin\Documents\EMSI 5\ML+DM+MicroServices\aquawatch-ms"
+
+# 2. Basculer sur votre branche
+git checkout dev_yassin
+
+# 3. Build VOS services (une seule fois)
+docker compose build service_alertes service_api_sig
+
+# 4. Build infrastructure complète (première fois)
+docker compose build
+```
+
+### **🚀 QUOTIDIEN - UP SERVICES SEULEMENT**
+
+#### **Démarrer votre travail** :
+```powershell
+# 1. Récupérer les dernières modifications
+git pull origin development
+
+# 2. Démarrer Docker Desktop (attendre qu'il soit vert)
+
+# 3. Démarrer VOS bases + services nécessaires (sans build)
+docker compose up db_alerts db_geo redis_queue geoserver -d
+
+# 4. Développer un service spécifique (sans build)
+docker compose up service_alertes    # Pour service alertes
+# OU
+docker compose up service_api_sig    # Pour service API-SIG
+```
+
+#### **Pendant développement** :
+```powershell
+# Modifier votre code dans services/service_alertes/src/ ou services/service_api_sig/src/
+
+# Redémarrage rapide après modifications
+docker compose restart service_alertes
+
+# Voir les logs en temps réel
+docker compose logs -f service_alertes
+```
+
+#### **Quand rebuilder** :
+```powershell
+# REBUILD seulement si :
+# ✅ Vous modifiez package.json (nouvelles dépendances Node.js)
+# ✅ Vous modifiez Dockerfile
+# ✅ Erreur "module not found"
+
+# Rebuild votre service spécifique
+docker compose build service_alertes
+docker compose up service_alertes
+
+# OU
+docker compose build service_api_sig
+docker compose up service_api_sig
+```
+
+### **⚡ COMMANDES RAPIDES YASSIN**
+
+#### **Workflow service alertes** :
+```powershell
+# Démarrer environnement alertes
+docker compose up db_alerts redis_queue -d
+docker compose up service_alertes -d
+
+# Tester API
+curl http://localhost:8004/health
+
+# Debug emails
+docker compose logs -f service_alertes
+docker compose restart service_alertes
+```
+
+#### **Workflow service API-SIG** :
+```powershell
+# Démarrer environnement cartographique
+docker compose up db_geo geoserver redis_queue -d
+docker compose up service_api_sig -d
+
+# Tester API
+curl http://localhost:8005/health
+
+# Vérifier GeoServer
+# Ouvrir : http://localhost:8080/geoserver (admin/aquawatch123)
+
+# Debug cartes
+docker compose logs -f service_api_sig
+docker compose restart service_api_sig
+```
+
+#### **Workflow intégration complète** :
+```powershell
+# Tester avec services de Hamza et Bilal
+docker compose up db_alerts db_geo redis_queue service_alertes service_api_sig -d
+
+# Vérifier Redis listeners
+docker compose exec redis_queue redis-cli monitor
+
+# Test notifications
+curl -X POST http://localhost:8004/api/test-alert
+```
+
 ### **2. Développer vos services**
 ```powershell
 # Service Alertes (Node.js)
