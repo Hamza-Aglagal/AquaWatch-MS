@@ -19,19 +19,20 @@ CREATE TABLE IF NOT EXISTS capteurs (
 
 -- Table des mesures (optimisée pour time-series)
 CREATE TABLE IF NOT EXISTS mesures (
-    id SERIAL PRIMARY KEY,
+    id SERIAL,
     capteur_id VARCHAR(50) NOT NULL,
     ph DECIMAL(4,2),
     temperature DECIMAL(5,2),
     turbidite DECIMAL(6,2),
     oxygene DECIMAL(5,2),
     conductivite DECIMAL(8,2),
-    timestamp TIMESTAMP DEFAULT NOW(),
+    timestamp TIMESTAMP NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (id, timestamp),
     FOREIGN KEY (capteur_id) REFERENCES capteurs(capteur_id)
 );
 
 -- Convertir en hypertable TimescaleDB (OPTIMISATION SÉRIES TEMPORELLES)
-SELECT create_hypertable('mesures', 'timestamp', if_not_exists => TRUE);
+SELECT create_hypertable('mesures', 'timestamp', if_not_exists => TRUE, migrate_data => TRUE);
 
 -- Index pour performance hypertable
 CREATE INDEX IF NOT EXISTS idx_mesures_capteur_timestamp ON mesures(capteur_id, timestamp DESC);
