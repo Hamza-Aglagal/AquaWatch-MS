@@ -18,16 +18,24 @@ const sequelize = new Sequelize({
   }
 });
 
-// Fonction pour tester la connexion
-const connectDatabase = async () => {
-  try {
-    await sequelize.authenticate();
-    logger.info('✅ Connexion à TimescaleDB réussie!');
-    return true;
-  } catch (error) {
-    logger.error('❌ Erreur connexion database:', error);
-    return false;
+// Fonction pour tester la connexion avec retry
+const connectDatabase = async (maxRetries = 5, retryDelay = 3000) => {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await sequelize.authenticate();
+      logger.info('✅ Connexion à TimescaleDB réussie!');
+      return true;
+    } catch (error) {
+      logger.warn(`⚠️ Tentative ${attempt}/${maxRetries} échouée: ${error.message}`);
+      if (attempt === maxRetries) {
+        logger.error('❌ Impossible de se connecter à la database après plusieurs tentatives');
+        return false;
+      }
+      logger.info(`⏳ Nouvelle tentative dans ${retryDelay/1000}s...`);
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+    }
   }
+  return false;
 };
 
 // Fonction pour synchroniser les modèles (en développement uniquement)

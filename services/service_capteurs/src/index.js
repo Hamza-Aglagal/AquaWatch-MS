@@ -3,9 +3,13 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const logger = require('./config/logger');
+const { validateEnv } = require('./config/env');
 const { connectDatabase, syncDatabase } = require('./config/database');
 const capteursRoutes = require('./routes/capteurs');
 const mqttService = require('./services/mqttService');
+
+// Validate environment variables first
+validateEnv();
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -77,8 +81,8 @@ const startServer = async () => {
     // 2. Synchronisation des modèles
     await syncDatabase();
 
-    // 3. Démarrer simulation MQTT
-    await mqttService.start();
+  // 3. Démarrer le service MQTT (réel si MQTT_BROKER_URL défini, sinon simulation si ENABLE_SIMULATOR=true)
+  await mqttService.start();
 
     // 4. Démarrer le serveur
     app.listen(PORT, () => {
