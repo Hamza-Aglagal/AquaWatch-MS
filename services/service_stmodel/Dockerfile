@@ -1,8 +1,18 @@
-# Dockerfile Python
+# Dockerfile Python avec outils de compilation pour PyTorch
 FROM python:3.12-slim
 
+# Installation des outils de compilation nécessaires
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
+
+# Mise à jour pip et installation des dépendances
 COPY requirements.txt .
+RUN pip install --upgrade pip setuptools wheel
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
