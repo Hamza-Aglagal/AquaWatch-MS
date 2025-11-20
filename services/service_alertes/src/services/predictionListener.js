@@ -1,6 +1,5 @@
 const Redis = require('ioredis');
-const nodemailer = require('nodemailer');
-const { createAlert } = require('./alertService');
+const alertService = require('./alertService');
 
 class PredictionListener {
   constructor() {
@@ -40,8 +39,29 @@ class PredictionListener {
           try {
             prediction = JSON.parse(raw);
           } catch (parseErr) {
-            console.error('JSON.parse failed for payload:', raw);
-            throw parseErr;
+            // Attempt tolerant cleanup for messages produced by PowerShell or JS-like objects
+            try {
+              let cleaned = raw;
+              // Replace single quotes with double quotes
+              cleaned = cleaned.replace(/'/g, '"');
+              // Quote unquoted object keys: { key: -> { "key":
+              cleaned = cleaned.replace(/([\{,\s])([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
+              // Quote bare uppercase words used as enum values (e.g. MAUVAISE)
+              cleaned = cleaned.replace(/:\s*([A-Z_]+)([,\}])/g, ':"$1"$2');
+              // Remove stray backslashes inserted by shells
+              cleaned = cleaned.replace(/\\+/g, '\\');
+              // Trim leftover wrapping quotes
+              if ((cleaned.startsWith('"') && cleaned.endsWith('"')) || (cleaned.startsWith("'") && cleaned.endsWith("'"))) {
+                cleaned = cleaned.slice(1, -1);
+              }
+
+              console.log('Attempting tolerant JSON parse, cleaned payload:', cleaned);
+              prediction = JSON.parse(cleaned);
+            } catch (cleanErr) {
+              console.error('JSON.parse failed for payload:', raw);
+              // preserve original parse error for higher-level logging
+              throw parseErr;
+            }
           }
           await this.handlePrediction(prediction);
         } catch (error) {
@@ -62,62 +82,11 @@ class PredictionListener {
         zone_longitude: prediction.zone.longitude,
         type: 'QUALITE_EAU_MAUVAISE',
         message: `Alerte : Qualité eau dégradée dans la zone [${prediction.zone.latitude}, ${prediction.zone.longitude}]`,
-        score_qualite: prediction.predictions.score_qualite
+        score_qualite: prediction.predictions.score_qualite,
+        severity: 'medium'
       };
 
-      const alert = await createAlert(alertData);
-
-      // ---- EMAIL (guarded & lazy-import) ----
-      const emailEnabled = process.env.EMAIL_ENABLED === 'true';
-      if (
-        emailEnabled &&
-        process.env.SMTP_HOST &&
-        process.env.SMTP_USER &&
-        process.env.SMTP_PASSWORD
-      ) {
-        // Lazy import models ONLY if email is enabled
-        const { AlertRecipient, AlertDelivery } = require('../models'); // <-- only loads now
-
-        try {
-          const transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: Number(process.env.SMTP_PORT || 587),
-            secure: false,
-            auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }
-          });
-
-          const recipients = await AlertRecipient.findAll({
-            where: { active: true },
-            attributes: ['email']
-          });
-          const to = recipients.map(r => r.email).filter(Boolean).join(',');
-
-          if (to) {
-            await transporter.sendMail({
-              from: process.env.SMTP_USER,
-              to,
-              subject: 'AquaWatch - Alerte qualité eau',
-              text: alertData.message
-            });
-
-            await AlertDelivery.create({
-              alert_id: alert.alert_id,
-              channel: 'email',
-              status: 'sent',
-              detail: `to=${to}`
-            });
-
-            console.log('📧 Email sent to:', to);
-          } else {
-            console.log('✉️ No active recipients; skipping email');
-          }
-        } catch (err) {
-          console.error('Error sending email:', err);
-        }
-      } else {
-        console.log('✉️ Email skipped (EMAIL_ENABLED not true or SMTP config missing)');
-      }
-      // ---------------------------------------
+      await alertService.createAlert(alertData);
     }
   }
 }

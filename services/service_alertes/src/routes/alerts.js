@@ -5,7 +5,9 @@ const alertService = require('../services/alertService');
 // Get alert history
 router.get('/history', async (req, res) => {
     try {
-        const alerts = await alertService.getAlertHistory();
+        // Accept optional filters via query string: type, startDate, endDate, zone_latitude, zone_longitude
+        const filters = req.query || {};
+        const alerts = await alertService.getAlertHistory(filters);
         res.json({ alerts });
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch alert history' });

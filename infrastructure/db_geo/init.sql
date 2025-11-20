@@ -4,95 +4,90 @@
 -- Extension PostGIS (déjà incluse dans l'image postgis/postgis)
 CREATE EXTENSION IF NOT EXISTS postgis;
 
--- Table des zones géographiques
+-- Table des zones géographiques avec qualité de l'eau
 CREATE TABLE IF NOT EXISTS zones_map (
-    id SERIAL PRIMARY KEY,
-    zone_id VARCHAR(50) UNIQUE NOT NULL,
-    zone_name VARCHAR(100),
-    zone_geom GEOMETRY(POLYGON, 4326), -- Polygone de la zone
-    center_point GEOMETRY(POINT, 4326), -- Point central
-    zone_type VARCHAR(50), -- 'water_body', 'monitoring_area', 'administrative'
-    administrative_level VARCHAR(50), -- 'region', 'province', 'commune'
-    created_at TIMESTAMP DEFAULT NOW()
+    zone_id SERIAL PRIMARY KEY,
+    nom VARCHAR(100) NOT NULL,
+    type VARCHAR(20) DEFAULT 'ville' CHECK (type IN ('ville', 'region')),
+    geometry GEOMETRY(POLYGON, 4326) NOT NULL,
+    centre_lat DECIMAL(10, 8) NOT NULL,
+    centre_lon DECIMAL(11, 8) NOT NULL,
+    qualite_actuelle VARCHAR(20) DEFAULT 'INCONNU' CHECK (qualite_actuelle IN ('BONNE', 'MOYENNE', 'MAUVAISE', 'INCONNU')),
+    derniere_mise_a_jour TIMESTAMP,
+    actif BOOLEAN DEFAULT TRUE
 );
 
--- Table des points d'intérêt (capteurs, points de prélèvement)
+-- Index spatial pour les zones
+CREATE INDEX IF NOT EXISTS idx_zone_geometry ON zones_map USING GIST (geometry);
+CREATE INDEX IF NOT EXISTS idx_zone_qualite ON zones_map (qualite_actuelle);
+
+-- Table des points d'intérêt (capteurs, ports, plages)
 CREATE TABLE IF NOT EXISTS poi_map (
-    id SERIAL PRIMARY KEY,
-    poi_id VARCHAR(50) UNIQUE NOT NULL,
-    poi_name VARCHAR(100),
-    poi_type VARCHAR(50), -- 'sensor', 'sampling_point', 'alert_zone'
-    location GEOMETRY(POINT, 4326),
-    zone_id VARCHAR(50) REFERENCES zones_map(zone_id),
-    metadata JSONB, -- Informations additionnelles
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT NOW()
+    poi_id SERIAL PRIMARY KEY,
+    nom VARCHAR(100) NOT NULL,
+    type VARCHAR(20) DEFAULT 'capteur' CHECK (type IN ('capteur', 'port', 'plage', 'autre')),
+    position GEOMETRY(POINT, 4326) NOT NULL,
+    latitude DECIMAL(10, 8) NOT NULL,
+    longitude DECIMAL(11, 8) NOT NULL,
+    capteur_id VARCHAR(50),
+    description TEXT,
+    actif BOOLEAN DEFAULT TRUE
 );
 
--- Table de l'état des zones (couleurs, status)
-CREATE TABLE IF NOT EXISTS zone_status (
-    id SERIAL PRIMARY KEY,
-    zone_id VARCHAR(50) REFERENCES zones_map(zone_id),
-    status_color VARCHAR(20), -- 'green', 'yellow', 'orange', 'red'
-    quality_score DECIMAL(5,2), -- Score 0-100
-    prediction_id VARCHAR(50), -- Référence prédiction qui a défini le status
-    last_updated TIMESTAMP DEFAULT NOW(),
-    valid_until TIMESTAMP, -- Validité du status
-    status_data JSONB -- Données détaillées du status
-);
+-- Index spatial pour les points
+CREATE INDEX IF NOT EXISTS idx_poi_position ON poi_map USING GIST (position);
+CREATE INDEX IF NOT EXISTS idx_poi_type ON poi_map (type);
+-- Données initiales: Zones géographiques du Maroc (côte Atlantique)
 
--- Index spatiaux (performance géographique)
-CREATE INDEX IF NOT EXISTS idx_zones_geom ON zones_map USING GIST(zone_geom);
-CREATE INDEX IF NOT EXISTS idx_zones_center ON zones_map USING GIST(center_point);
-CREATE INDEX IF NOT EXISTS idx_poi_location ON poi_map USING GIST(location);
+-- 🌊 AGADIR
+INSERT INTO zones_map (nom, type, geometry, centre_lat, centre_lon, qualite_actuelle) VALUES
+('Agadir', 'ville', ST_SetSRID(ST_GeomFromText('POLYGON((-9.65 30.35, -9.50 30.35, -9.50 30.50, -9.65 30.50, -9.65 30.35))'), 4326), 30.4278, -9.5981, 'INCONNU');
 
--- Index classiques
-CREATE INDEX IF NOT EXISTS idx_zone_status_updated ON zone_status(last_updated DESC);
-CREATE INDEX IF NOT EXISTS idx_poi_type ON poi_map(poi_type);
+-- 🌊 ESSAOUIRA
+INSERT INTO zones_map (nom, type, geometry, centre_lat, centre_lon, qualite_actuelle) VALUES
+('Essaouira', 'ville', ST_SetSRID(ST_GeomFromText('POLYGON((-9.80 31.45, -9.65 31.45, -9.65 31.60, -9.80 31.60, -9.80 31.45))'), 4326), 31.5085, -9.7595, 'INCONNU');
 
--- Zones géographiques du Maroc (principales régions)
-INSERT INTO zones_map (zone_id, zone_name, center_point, zone_type, administrative_level) VALUES
-('ZONE_RABAT', 'Région Rabat-Salé-Kénitra', ST_SetSRID(ST_MakePoint(-6.841650, 34.020882), 4326), 'administrative', 'region'),
-('ZONE_CASA', 'Région Casablanca-Settat', ST_SetSRID(ST_MakePoint(-7.639133, 33.606892), 4326), 'administrative', 'region'),
-('ZONE_FES', 'Région Fès-Meknès', ST_SetSRID(ST_MakePoint(-4.999448, 34.037732), 4326), 'administrative', 'region')
-ON CONFLICT (zone_id) DO NOTHING;
+-- 🌊 SAFI
+INSERT INTO zones_map (nom, type, geometry, centre_lat, centre_lon, qualite_actuelle) VALUES
+('Safi', 'ville', ST_SetSRID(ST_GeomFromText('POLYGON((-9.30 32.20, -9.15 32.20, -9.15 32.35, -9.30 32.35, -9.30 32.20))'), 4326), 32.2994, -9.2372, 'INCONNU');
 
--- Points d'intérêt (capteurs)
-INSERT INTO poi_map (poi_id, poi_name, poi_type, location, zone_id, metadata) VALUES
-('POI_CAP001', 'Capteur Rabat Centre', 'sensor', ST_SetSRID(ST_MakePoint(-6.841650, 34.020882), 4326), 'ZONE_RABAT', '{"capteur_id": "CAP001", "type": "multiparameter"}'),
-('POI_CAP002', 'Capteur Casablanca Port', 'sensor', ST_SetSRID(ST_MakePoint(-7.639133, 33.606892), 4326), 'ZONE_CASA', '{"capteur_id": "CAP002", "type": "multiparameter"}'),
-('POI_CAP003', 'Capteur Fès Ville', 'sensor', ST_SetSRID(ST_MakePoint(-4.999448, 34.037732), 4326), 'ZONE_FES', '{"capteur_id": "CAP003", "type": "multiparameter"}')
-ON CONFLICT (poi_id) DO NOTHING;
+-- 🌊 EL JADIDA
+INSERT INTO zones_map (nom, type, geometry, centre_lat, centre_lon, qualite_actuelle) VALUES
+('El Jadida', 'ville', ST_SetSRID(ST_GeomFromText('POLYGON((-8.60 33.15, -8.45 33.15, -8.45 33.30, -8.60 33.30, -8.60 33.15))'), 4326), 33.2316, -8.5007, 'INCONNU');
 
--- Status initial des zones (vert par défaut)
-INSERT INTO zone_status (zone_id, status_color, quality_score, valid_until) VALUES
-('ZONE_RABAT', 'green', 85.0, NOW() + INTERVAL '24 hours'),
-('ZONE_CASA', 'green', 78.0, NOW() + INTERVAL '24 hours'),
-('ZONE_FES', 'green', 82.0, NOW() + INTERVAL '24 hours')
-ON CONFLICT DO NOTHING;
+-- 🌊 CASABLANCA
+INSERT INTO zones_map (nom, type, geometry, centre_lat, centre_lon, qualite_actuelle) VALUES
+('Casablanca', 'ville', ST_SetSRID(ST_GeomFromText('POLYGON((-7.75 33.45, -7.50 33.45, -7.50 33.65, -7.75 33.65, -7.75 33.45))'), 4326), 33.5731, -7.5898, 'INCONNU');
 
--- Vues utiles pour l'API cartographique
-CREATE OR REPLACE VIEW v_map_zones_current AS
-SELECT 
-    z.zone_id,
-    z.zone_name,
-    ST_AsGeoJSON(z.center_point) as center_coordinates,
-    zs.status_color,
-    zs.quality_score,
-    zs.last_updated
-FROM zones_map z
-LEFT JOIN zone_status zs ON z.zone_id = zs.zone_id
-WHERE zs.valid_until > NOW() OR zs.valid_until IS NULL;
+-- 🌊 MOHAMMEDIA
+INSERT INTO zones_map (nom, type, geometry, centre_lat, centre_lon, qualite_actuelle) VALUES
+('Mohammedia', 'ville', ST_SetSRID(ST_GeomFromText('POLYGON((-7.50 33.65, -7.30 33.65, -7.30 33.75, -7.50 33.75, -7.50 33.65))'), 4326), 33.6866, -7.3830, 'INCONNU');
 
-CREATE OR REPLACE VIEW v_map_sensors AS
-SELECT 
-    poi_id,
-    poi_name,
-    ST_AsGeoJSON(location) as coordinates,
-    metadata->>'capteur_id' as capteur_id,
-    is_active
-FROM poi_map 
-WHERE poi_type = 'sensor';
+-- 🌊 RABAT
+INSERT INTO zones_map (nom, type, geometry, centre_lat, centre_lon, qualite_actuelle) VALUES
+('Rabat', 'ville', ST_SetSRID(ST_GeomFromText('POLYGON((-6.95 33.95, -6.75 33.95, -6.75 34.10, -6.95 34.10, -6.95 33.95))'), 4326), 34.0209, -6.8416, 'INCONNU');
+
+-- 🌊 KENITRA
+INSERT INTO zones_map (nom, type, geometry, centre_lat, centre_lon, qualite_actuelle) VALUES
+('Kénitra', 'ville', ST_SetSRID(ST_GeomFromText('POLYGON((-6.70 34.20, -6.50 34.20, -6.50 34.35, -6.70 34.35, -6.70 34.20))'), 4326), 34.2610, -6.5889, 'INCONNU');
+
+-- 🌊 LARACHE
+INSERT INTO zones_map (nom, type, geometry, centre_lat, centre_lon, qualite_actuelle) VALUES
+('Larache', 'ville', ST_SetSRID(ST_GeomFromText('POLYGON((-6.25 35.10, -6.05 35.10, -6.05 35.25, -6.25 35.25, -6.25 35.10))'), 4326), 35.1932, -6.1560, 'INCONNU');
+
+-- 🌊 TANGER
+INSERT INTO zones_map (nom, type, geometry, centre_lat, centre_lon, qualite_actuelle) VALUES
+('Tanger', 'ville', ST_SetSRID(ST_GeomFromText('POLYGON((-5.95 35.70, -5.70 35.70, -5.70 35.85, -5.95 35.85, -5.95 35.70))'), 4326), 35.7595, -5.8340, 'INCONNU');
+
+-- 📍 Capteurs d'exemple
+INSERT INTO poi_map (nom, type, position, latitude, longitude, capteur_id, description) VALUES
+('Capteur Agadir Port', 'capteur', ST_SetSRID(ST_MakePoint(-9.6347, 30.4202), 4326), 30.4202, -9.6347, 'CAP_AGD_001', 'Capteur principal du port d''Agadir'),
+('Capteur Casablanca Marina', 'capteur', ST_SetSRID(ST_MakePoint(-7.6184, 33.5928), 4326), 33.5928, -7.6184, 'CAP_CAS_001', 'Capteur marina de Casablanca'),
+('Capteur Rabat Plage', 'capteur', ST_SetSRID(ST_MakePoint(-6.8498, 34.0301), 4326), 34.0301, -6.8498, 'CAP_RAB_001', 'Capteur plage de Rabat'),
+('Capteur Tanger Port', 'capteur', ST_SetSRID(ST_MakePoint(-5.8092, 35.7681), 4326), 35.7681, -5.8092, 'CAP_TAN_001', 'Capteur du port de Tanger');
+
+-- Message de fin
+SELECT 'Base de données GEO initialisée avec succès!' as message;
 
 -- Fonction pour trouver zones dans un rayon
 CREATE OR REPLACE FUNCTION zones_within_radius(center_lat DECIMAL, center_lng DECIMAL, radius_km INTEGER)

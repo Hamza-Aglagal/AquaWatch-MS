@@ -40,6 +40,8 @@ services:
   # BASE DÉDIÉE - Alertes + Cache (Yassin)
   db_alerts:
     image: postgres:14
+    env_file:
+      - .env
     environment:
       POSTGRES_USER: ${ALERTS_DB_USER}
       POSTGRES_PASSWORD: ${ALERTS_DB_PASSWORD}
@@ -142,6 +144,9 @@ services:
   # Service Alertes (Yassin)
   service_alertes:
     build: ./services/service_alertes
+    env_file:
+      - .env
+      - .env.alertes
     depends_on:
       - db_alerts
       - redis_queue

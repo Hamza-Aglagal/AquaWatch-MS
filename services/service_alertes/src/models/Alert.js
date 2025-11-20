@@ -27,6 +27,11 @@ const Alert = sequelize.define('Alert', {
         type: DataTypes.TEXT,
         allowNull: false
     },
+    severity: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'medium'
+    },
     status: {
         type: DataTypes.ENUM('pending', 'sent', 'failed'),
         defaultValue: 'pending'
@@ -35,6 +40,13 @@ const Alert = sequelize.define('Alert', {
         type: DataTypes.FLOAT,
         allowNull: true
     }
+}, {
+    tableName: 'alerts',
+    underscored: true,
+    freezeTableName: true,
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
 });
 
 module.exports = Alert;

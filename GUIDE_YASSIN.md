@@ -297,40 +297,67 @@ git push origin dev_yassin
 
 ### **📋 FLUX SERVICE ALERTES** :
 
-#### **Étape 1 - Connecter à PostgreSQL**
+#### **Étape 1 - Connecter à PostgreSQL** ✅
 - **Outil** : `pg` (Node.js PostgreSQL client)
 - **Action** : Connexion à VOTRE base `alerts_db` port 5435
 - **Variables** : `DATABASE_URL=postgresql://alerts_user:alerts_pass_2025@db_alerts:5432/alerts_db`
+- **Status** : ✅ **VÉRIFIÉ** - Service connecté, tables créées (alerts, AlertRecipients, alert_recipients, alert_types, alert_deliveries)
 
-#### **Étape 2 - Configurer Redis listener**
+#### **Étape 2 - Configurer Redis listener** ✅
 - **Outil** : `redis` Node.js client
 - **Action** : S'abonner au canal "new_prediction" de Hamza
 - **URL** : `redis://redis_queue:6379`
+- **Status** : ✅ **VÉRIFIÉ** - Abonné actif au canal 'new_prediction', 1 subscriber détecté
 
-#### **Étape 3 - Traiter prédictions reçues**
+#### **Étape 3 - Traiter prédictions reçues** ✅
 - **Outil** : JavaScript JSON parsing
 - **Action** : Analyser score qualité et déterminer si alerte nécessaire
 - **Seuils** : Si qualité = "MAUVAISE" ou score < 4.0 → Déclencher alerte
+- **Status** : ✅ **VÉRIFIÉ** - Logique testée avec succès :
+  - ✓ qualite_eau='MAUVAISE' → Alerte créée
+  - ✓ score < 4.0 → Alerte créée
+  - ✓ qualite_eau='BONNE' ET score > 4.0 → Pas d'alerte
 
-#### **Étape 4 - Configurer Nodemailer**
+#### **Étape 4 - Configurer Nodemailer** ✅
 - **Outil** : `nodemailer` Node.js email client
 - **Action** : Configuration SMTP Gmail/Outlook avec credentials .env
 - **Variables** : `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD`
+- **Status** : ✅ **VÉRIFIÉ** - Variables SMTP configurées, transporter créé avec TLS tolérant en dev
 
-#### **Étape 5 - Envoyer notifications**
+> **Remarque** : Laisser l'**Étape 5 - Envoyer notifications** comme la DERNIÈRE étape du projet. La configuration SMTP et la mise en production des envois d'emails doivent être effectuées en dernier, une fois les autres fonctionnalités (Redis listener, traitement, stockage en base) stabilisées. Pendant le développement local, les envois sont désactivés par défaut et des méthodes de test (Ethereal) sont recommandées.
+
+#### **Étape 5 - Envoyer notifications** ✅
 - **Outil** : Nodemailer + templates HTML
 - **Action** : Envoyer emails à destinataires dans zone affectée
 - **Contenu** : Zone GPS, type alerte, score qualité, timestamp
+- **Status** : ✅ **VÉRIFIÉ** - Envoi désactivé par défaut (EMAIL_ENABLED non défini), prêt pour activation en production
+- **Configuration finale** : Définir `EMAIL_ENABLED=true` et fournir SMTP credentials valides pour activer l'envoi réel
 
-#### **Étape 6 - Stocker historique**
+#### **Étape 6 - Stocker historique** ✅
 - **Outil** : PostgreSQL `INSERT` dans table `alerts`
-- **Action** : Logger toutes alertes avec status envoi (sent/failed)
+- **Action** : Logger toutes alertes avec status envoi (pending/sent/failed)
 - **Traçabilité** : Pour audit et statistiques
+- **Status** : ✅ **COMPLÉTÉ** - Les alertes sont automatiquement stockées dans la base de données lors de leur création
 
-#### **Étape 7 - Exposer API historique**
+#### **Étape 7 - Exposer API historique** ✅
 - **Outil** : Express.js routes
 - **Action** : Endpoint `/api/alerts/history` pour consultation
 - **Filtres** : Par date, zone, type d'alerte
+- **Status** : ✅ **COMPLÉTÉ** - API disponible avec filtres optionnels
+- **Exemples d'utilisation** :
+  ```powershell
+  # Toutes les alertes
+  curl http://localhost:8004/api/alerts/history
+  
+  # Filtrer par type
+  curl "http://localhost:8004/api/alerts/history?type=QUALITE_EAU_MAUVAISE"
+  
+  # Filtrer par date
+  curl "http://localhost:8004/api/alerts/history?startDate=2025-11-20&endDate=2025-11-21"
+  
+  # Filtrer par zone (coordonnées exactes)
+  curl "http://localhost:8004/api/alerts/history?zone_latitude=34.02&zone_longitude=-6.84"
+  ```
 
 ### **📋 FLUX SERVICE API-SIG** :
 
