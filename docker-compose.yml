@@ -3,9 +3,9 @@ services:
   db_capteurs:
     image: timescale/timescaledb:latest-pg14
     environment:
-      POSTGRES_USER: ${CAPTEURS_DB_USER}
-      POSTGRES_PASSWORD: ${CAPTEURS_DB_PASSWORD}
-      POSTGRES_DB: ${CAPTEURS_DB_NAME}
+      POSTGRES_USER: ${CAPTEURS_DB_USER:-capteurs_user}
+      POSTGRES_PASSWORD: ${CAPTEURS_DB_PASSWORD:-capteurs_pass}
+      POSTGRES_DB: ${CAPTEURS_DB_NAME:-capteurs_db}
     ports:
       - "5433:5432"
     volumes:
@@ -108,10 +108,26 @@ services:
       - db_capteurs
       - redis_queue
     environment:
+      - PORT=8000
+      - DB_HOST=db_capteurs
+      - DB_PORT=5432
+      - DB_NAME=${CAPTEURS_DB_NAME:-capteurs_db}
+      - DB_USER=${CAPTEURS_DB_USER:-capteurs_user}
+      - DB_PASSWORD=${CAPTEURS_DB_PASSWORD:-capteurs_pass}
       - DATABASE_URL=postgresql://${CAPTEURS_DB_USER}:${CAPTEURS_DB_PASSWORD}@db_capteurs:5432/${CAPTEURS_DB_NAME}
       - REDIS_URL=redis://redis_queue:6379
+      - ENABLE_SIMULATOR=false
+      - MQTT_BROKER_URL=mqtt://test.mosquitto.org:1883
+      - MQTT_USERNAME=${MQTT_USERNAME:-}
+      - MQTT_PASSWORD=${MQTT_PASSWORD:-}
+      - MQTT_TOPIC=${MQTT_TOPIC:-aquawatch/capteur/+/data}
     ports:
       - "8001:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   # Service Satellite (Bilal)
   service_satellite:
