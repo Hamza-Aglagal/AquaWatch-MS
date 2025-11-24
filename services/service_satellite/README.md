@@ -1,128 +1,82 @@
 # 🛰️ Service Satellite - AquaWatch
 
-**Version:** 1.0.0  
-**Développeur:** Bilal KHANTOURI  
-**Technologie:** Python 3.12 + FastAPI  
-**Base de données:** MongoDB  
-**Stockage:** MinIO (S3-compatible)
+> **Analyse d'images satellites pour la qualité de l'eau**
+
+**Version:** 1.0.0 | **Stack:** Python + FastAPI | **Développeur:** Bilal KHANTOURI
 
 ---
 
-## 📋 Vue d'ensemble
+## 🎯 C'est quoi ce service?
 
-Le **Service Satellite** est responsable du téléchargement, du traitement et de l'exposition des données satellites pour l'analyse de la qualité de l'eau.
+Ce service **télécharge et analyse des images satellites** pour détecter la qualité de l'eau:
 
-### Fonctionnalités principales:
-- ✅ Téléchargement d'images Sentinel-2 via SentinelHub API
-- ✅ Calcul d'indices environnementaux (NDWI, Chlorophylle, Turbidité)
-- ✅ Stockage des images dans MinIO
-- ✅ Métadonnées dans MongoDB
-- ✅ API REST pour STModel (Hamza) et API-SIG (Yassin)
+🌊 **NDWI** → Détecte l'eau  
+🌿 **Chlorophylle** → Mesure les algues  
+🔍 **Turbidité** → Évalue la clarté  
+
+### 📡 Pour qui?
+- **Hamza (STModel)** → Données pour Machine Learning
+- **Yassin (API-SIG)** → Positions GPS pour cartes
 
 ---
 
-## 🏗️ Architecture
+## 📁 Structure Simple
 
 ```
 service_satellite/
-├── app/
-│   ├── main.py                 # Entry point FastAPI
-│   ├── config/
-│   │   ├── database.py        # Connexion MongoDB
-│   │   ├── storage.py         # Connexion MinIO
-│   │   └── sentinel.py        # Config SentinelHub API
-│   ├── models/
-│   │   └── satellite.py       # Modèles Pydantic
-│   ├── routes/
-│   │   └── satellite.py       # Endpoints API
-│   └── services/
-│       ├── download.py        # Téléchargement images
-│       └── processing.py      # Calcul indices
-├── Dockerfile
-├── requirements.txt
-└── README.md                   # Ce fichier
+├── 🎯 main.py              → Lance l'API
+├── ⚙️  config/             → Connexions (MongoDB, MinIO, Sentinel)
+├── 📝 models/              → Validation des données
+├── 🛣️  routes/             → Endpoints API
+└── 🔧 services/            → Téléchargement + Traitement images
 ```
+
+**Comment ça marche?**
+1. **Download** → Télécharge image Sentinel-2
+2. **Process** → Calcule indices (NDWI, Chloro, Turbidité)
+3. **Store** → Sauvegarde dans MinIO + MongoDB
+4. **API** → Expose les données
 
 ---
 
-## 🚀 Démarrage rapide
+## 🚀 Démarrage en 3 étapes
 
-### **Prérequis:**
-- Docker Desktop installé et démarré
-- MongoDB (`db_satellite`) running
-- MinIO (`minio_storage`) running
-- Credentials SentinelHub (optionnel pour Phase 1)
-
-### **1. Démarrer l'infrastructure:**
+### **Étape 1: Lancer l'infrastructure**
 ```powershell
 docker compose up db_satellite minio_storage redis_queue -d
 ```
 
-### **2. Build le service (première fois):**
+### **Étape 2: Build + Démarrer le service**
 ```powershell
 docker compose build service_satellite
-```
-
-### **3. Démarrer le service:**
-```powershell
 docker compose up service_satellite
 ```
 
-### **4. Tester:**
+### **Étape 3: Tester 🎉**
 ```powershell
-# Health check
-curl http://localhost:8002/health
-
-# Endpoint principal pour Hamza
-curl http://localhost:8002/api/satellite/indices/latest
-
-# Documentation interactive
-# Ouvrir: http://localhost:8002/docs
-```
-
----
-
-## 📡 API Endpoints
-
-### **GET /** - Documentation service
-Retourne informations sur le service et liste des endpoints disponibles.
-
-**Exemple:**
-```bash
-curl http://localhost:8002/
-```
-
-**Réponse:**
-```json
-{
-  "service": "satellite",
-  "version": "1.0.0",
-  "status": "running",
-  "endpoints": {
-    "health": "/health",
-    "docs": "/docs",
-    "indices": "/api/satellite/indices/latest",
-    "images": "/api/satellite/images"
-  }
-}
-```
-
----
-
-### **GET /health** - Health check
-Vérifie l'état du service et des connexions.
-
-**Exemple:**
-```bash
 curl http://localhost:8002/health
 ```
 
-**Réponse:**
+**✨ Accès rapides:**
+- 📊 API Docs: http://localhost:8002/docs
+- 🗂️ MinIO Console: http://localhost:9001 (admin/aquawatch123)
+- ✅ Health: http://localhost:8002/health
+
+---
+
+## 📡 Les 3 APIs Principales
+
+### **1️⃣ Health Check** ✅
+**Vérifier si le service fonctionne**
+
+```bash
+GET http://localhost:8002/health
+```
+
+**Retour:**
 ```json
 {
   "status": "ok",
-  "service": "satellite",
-  "version": "1.0.0",
   "mongodb": "connected",
   "minio": "connected"
 }
@@ -130,19 +84,18 @@ curl http://localhost:8002/health
 
 ---
 
-### **GET /api/satellite/indices/latest** - 🎯 Pour Hamza (STModel)
-Récupère les derniers indices satellites calculés pour le machine learning.
+### **2️⃣ Derniers Indices** 🎯 ← **Important pour Hamza**
+**Récupérer les données satellites pour ML**
 
-**Query Parameters:**
-- `limit` (int, 1-100): Nombre d'indices à retourner (défaut: 10)
-- `hours` (int, 1-720): Période en heures (défaut: 24)
-
-**Exemple:**
 ```bash
-curl "http://localhost:8002/api/satellite/indices/latest?limit=5&hours=24"
+GET /api/satellite/indices/latest?limit=10&hours=24
 ```
 
-**Réponse:**
+**Paramètres:**
+- `limit`: Combien d'indices (1-100, défaut: 10)
+- `hours`: Depuis combien d'heures (1-720, défaut: 24)
+
+**Exemple de réponse:**
 ```json
 {
   "success": true,
@@ -156,10 +109,10 @@ curl "http://localhost:8002/api/satellite/indices/latest?limit=5&hours=24"
         "rayon_km": 5
       },
       "indices": {
-        "chlorophylle": 0.8,
-        "turbidite_satellite": 15.2,
-        "temperature_surface": 23.1,
-        "ndwi": 0.45
+        "chlorophylle": 0.8,           // mg/m³
+        "turbidite_satellite": 15.2,   // NTU
+        "temperature_surface": 23.1,   // °C
+        "ndwi": 0.45                   // -1 à 1
       },
       "timestamp": "2025-11-24T10:00:00Z"
     }
@@ -167,496 +120,290 @@ curl "http://localhost:8002/api/satellite/indices/latest?limit=5&hours=24"
 }
 ```
 
-**Format des indices:**
-- `chlorophylle` (float): Concentration chlorophylle-a en mg/m³
-- `turbidite_satellite` (float): Turbidité en NTU
-- `temperature_surface` (float): Température surface en °C
-- `ndwi` (float): Normalized Difference Water Index (-1 à 1)
-
 ---
 
-### **GET /api/satellite/images** - Liste images
-Liste toutes les images satellites avec pagination.
+### **3️⃣ Liste Images** 📋
+**Voir toutes les images satellites**
 
-**Query Parameters:**
-- `skip` (int, ≥0): Nombre d'images à sauter (défaut: 0)
-- `limit` (int, 1-100): Nombre d'images à retourner (défaut: 10)
-
-**Exemple:**
 ```bash
-curl "http://localhost:8002/api/satellite/images?skip=0&limit=10"
+GET /api/satellite/images?skip=0&limit=10
 ```
 
-**Réponse:**
+**Retour:**
 ```json
 {
   "success": true,
   "total": 25,
   "count": 10,
-  "images": [
-    {
-      "image_id": "SAT001",
-      "zone": {...},
-      "timestamp": "2025-11-24T10:00:00Z",
-      "source": "Sentinel-2",
-      "processed": true,
-      "file_path": "satellite-images/2025/11/SAT001.tiff"
-    }
-  ]
+  "images": [...]
 }
 ```
 
 ---
 
-### **POST /api/satellite/images** - Créer image (test)
-Endpoint de test pour créer manuellement une entrée d'image.
+## 🔬 Les Indices Expliqués Simplement
 
-**Body (JSON):**
-```json
-{
-  "image_id": "SAT_TEST_001",
-  "zone": {
-    "latitude": 33.5731,
-    "longitude": -7.5898,
-    "rayon_km": 5
-  },
-  "source": "Sentinel-2",
-  "processed": false
-}
+### 🌊 **NDWI** - Détecteur d'Eau
 ```
+NDWI = (Green - NIR) / (Green + NIR)
+```
+- ✅ **NDWI > 0** → C'est de l'eau!
+- ❌ **NDWI < 0** → Sol ou végétation
 
 ---
 
-## 🔬 Indices Calculés
-
-### **1. NDWI (Normalized Difference Water Index)**
-**Formule:** `NDWI = (Green - NIR) / (Green + NIR)`
-
-**Interprétation:**
-- NDWI > 0: Eau probable
-- NDWI < 0: Sol/végétation
-
-**Utilisation:** Détection des zones aquatiques
+### 🌿 **Chlorophylle** - Niveau d'Algues
+- **Plus haut = Plus d'algues**
+- Unité: mg/m³
+- Bon pour détecter pollution biologique
 
 ---
 
-### **2. Chlorophylle-a**
-**Méthode:** Ratio NIR/Red avec facteur de conversion
-
-**Unité:** mg/m³
-
-**Utilisation:** Évaluation de la qualité biologique de l'eau, détection d'algues
+### 🔍 **Turbidité** - Clarté de l'Eau
+- **Plus haut = Eau trouble**
+- Unité: NTU
+- Mesure la pollution par particules
 
 ---
 
-### **3. Turbidité**
-**Méthode:** Réflectance bande rouge (B04)
-
-**Unité:** NTU (Nephelometric Turbidity Units)
-
-**Utilisation:** Mesure de la clarté de l'eau, pollution
+### 🌡️ **Température** (Bientôt)
+- À implémenter
+- Nécessite bandes thermiques Landsat
 
 ---
 
-### **4. Température de surface**
-**Statut:** À implémenter (nécessite bande thermique)
-
-**Unité:** °C
-
----
-
-## 🛠️ Configuration
-
-### **Variables d'environnement:**
+## ⚙️ Configuration (Variables d'environnement)
 
 ```env
-# Application
+# 🚀 Application
 PORT=8000
-LOG_LEVEL=info
 
-# MongoDB
+# 🗄️ MongoDB
 MONGODB_URL=mongodb://satellite_user:satellite_pass@db_satellite:27017/satellite_db
 
-# MinIO
+# 📦 MinIO (Stockage images)
 MINIO_ENDPOINT=minio_storage:9000
 MINIO_ACCESS_KEY=admin
 MINIO_SECRET_KEY=aquawatch123
 
-# SentinelHub (optionnel pour Phase 1)
+# 🛰️ SentinelHub (Optionnel - Phase 2)
 SENTINEL_CLIENT_ID=your_client_id
 SENTINEL_CLIENT_SECRET=your_client_secret
 ```
 
-### **Accès MinIO Console:**
-- URL: http://localhost:9001
-- Login: admin
-- Password: aquawatch123
+**🗂️ Accès MinIO:** http://localhost:9001 (admin/aquawatch123)
 
 ---
 
-## 📦 Stack Technique
+## 🛠️ Technologies Utilisées
 
-### **Framework & Serveur:**
-- **FastAPI** 0.104.1 - Framework web moderne et rapide
-- **Uvicorn** 0.24.0 - Serveur ASGI performant
-- **Pydantic** 2.5.0 - Validation de données
-
-### **Base de données:**
-- **PyMongo** 4.6.0 - Driver MongoDB pour Python
-- **MongoDB** 6.0 - Base NoSQL pour métadonnées
-
-### **Stockage:**
-- **MinIO** 7.2.0 - Stockage S3-compatible pour images
-- **MinIO Server** - Object storage distribué
-
-### **Traitement géospatial:**
-- **GDAL** 3.7.3 - Librairie géospatiale de référence
-- **Rasterio** 1.3.9 - Interface Python pour GDAL
-- **SentinelHub** 3.9.0 - API Copernicus Sentinel
-- **NumPy** 1.26.4 - Calculs scientifiques
-- **Pillow** 10.1.0 - Traitement d'images de base
-
-### **Communications:**
-- **Redis** 5.0.1 - File d'attente pour traitement asynchrone
+| Catégorie | Outil | Rôle |
+|-----------|-------|------|
+| 🌐 **API** | FastAPI + Uvicorn | Serveur web rapide |
+| 🗄️ **Database** | MongoDB + PyMongo | Stockage métadonnées |
+| 📦 **Storage** | MinIO | Stockage images (S3) |
+| 🛰️ **Satellite** | SentinelHub API | Téléchargement Sentinel-2 |
+| 🔬 **Traitement** | GDAL + Rasterio + NumPy | Calcul indices |
+| ⚡ **Queue** | Redis | Tâches asynchrones |
 
 ---
 
-## 📚 Modules Python
+## 💻 Code Rapide - Comment Utiliser
 
-### **`app/config/database.py`**
-Gestion connexion MongoDB avec retry logic (5 tentatives, 3s délai).
-
-```python
-from app.config.database import Database
-
-# Connexion
-db = Database.get_db()
-
-# Utilisation
-collection = db.satellite_images
-images = collection.find({})
-```
-
-### **`app/config/storage.py`**
-Gestion stockage MinIO avec création automatique du bucket.
-
-```python
-from app.config.storage import MinIOStorage
-
-# Connexion
-client = MinIOStorage.get_client()
-
-# Upload fichier
-client.fput_object("satellite-images", "test.tiff", "local_file.tiff")
-```
-
-### **`app/config/sentinel.py`**
-Configuration SentinelHub API pour téléchargement d'images.
-
-```python
-from app.config.sentinel import SentinelConfig
-
-# Vérifier configuration
-if SentinelConfig.is_configured():
-    config = SentinelConfig.get_config()
-```
-
-### **`app/services/download.py`**
-Téléchargement d'images Sentinel-2 par zone géographique.
-
-```python
-from app.services.download import SentinelDownloader
-
-downloader = SentinelDownloader()
-image = downloader.download_image(
-    latitude=33.5731,
-    longitude=-7.5898,
-    rayon_km=5.0
-)
-# Retourne: numpy array [512x512x4] avec bandes B02, B03, B04, B08
-```
-
-### **`app/services/processing.py`**
-Calcul des indices environnementaux depuis images satellites.
-
-```python
-from app.services.processing import ImageProcessor
-
-# Calculer NDWI
-ndwi = ImageProcessor.calculate_ndwi(nir_band, green_band)
-
-# Calculer chlorophylle
-chloro = ImageProcessor.calculate_chlorophyll(red_band, nir_band)
-
-# Calculer turbidité
-turb = ImageProcessor.calculate_turbidity(red_band)
-
-# Traiter image complète
-indices = ImageProcessor.process_sentinel_image(image_data)
-```
-
----
-
-## 🔄 Workflow Complet
-
-### **Phase 1: Téléchargement (Implémenté)**
+### **Télécharger une image**
 ```python
 from app.services.download import SentinelDownloader
 
 downloader = SentinelDownloader()
 image = downloader.download_image(33.5731, -7.5898, 5.0)
+# ↓ Retourne image 512x512 avec 4 bandes
 ```
 
-### **Phase 2: Traitement (Implémenté)**
+### **Calculer les indices**
 ```python
 from app.services.processing import ImageProcessor
 
 indices = ImageProcessor.process_sentinel_image(image)
-# {'ndwi': 0.45, 'chlorophylle': 0.8, 'turbidite_satellite': 15.2}
+# ↓ {'ndwi': 0.45, 'chlorophylle': 0.8, 'turbidite': 15.2}
 ```
 
-### **Phase 3: Stockage (À implémenter)**
+### **Sauvegarder dans MongoDB**
 ```python
-from app.config.storage import MinIOStorage
 from app.config.database import Database
 
-# Sauvegarder image dans MinIO
-client = MinIOStorage.get_client()
-path = f"satellite-images/{image_id}.tiff"
-client.fput_object("satellite-images", path, local_file)
-
-# Sauvegarder métadonnées dans MongoDB
 db = Database.get_db()
 db.satellite_images.insert_one({
-    "image_id": image_id,
-    "zone": {...},
+    "image_id": "SAT001",
+    "zone": {"latitude": 33.5731, "longitude": -7.5898},
     "indices": indices,
-    "file_path": path,
     "timestamp": datetime.utcnow()
 })
 ```
 
+### **Uploader dans MinIO**
+```python
+from app.config.storage import MinIOStorage
+
+client = MinIOStorage.get_client()
+client.fput_object("satellite-images", "SAT001.tiff", "image.tiff")
+```
+
 ---
 
-## 🧪 Tests
+## 🔄 Workflow en 3 Étapes
 
-### **Test manuel avec curl:**
-```powershell
-# Health check
+```mermaid
+graph LR
+    A[🛰️ Download Image] --> B[🔬 Process Image]
+    B --> C[💾 Store Data]
+    C --> D[📡 Expose API]
+```
+
+**1️⃣ Download** → Sentinel-2 image  
+**2️⃣ Process** → Calcul NDWI, Chloro, Turbidité  
+**3️⃣ Store** → MinIO (image) + MongoDB (indices)  
+**4️⃣ API** → Hamza & Yassin récupèrent les données
+
+---
+
+## 🧪 Tests Rapides
+
+### **✅ Tester avec curl**
+```bash
 curl http://localhost:8002/health
-
-# Liste images
 curl http://localhost:8002/api/satellite/images
-
-# Indices pour ML
 curl "http://localhost:8002/api/satellite/indices/latest?limit=5"
 ```
 
-### **Test avec Postman:**
-1. Importer collection depuis `/docs` (Swagger)
-2. Tester chaque endpoint
-3. Valider format des réponses
+### **📊 Swagger UI (Recommandé)**
+Ouvre http://localhost:8002/docs et teste directement!
 
-### **Logs du service:**
+### **📝 Voir les logs**
 ```powershell
-# En temps réel
 docker compose logs -f service_satellite
-
-# Dernières 50 lignes
-docker logs aquawatch-ms-service_satellite-1 --tail 50
 ```
 
 ---
 
-## 🐛 Debugging
+## 🐛 Problèmes Courants & Solutions
 
-### **Service ne démarre pas:**
+| Problème | Solution |
+|----------|----------|
+| ❌ Service ne démarre pas | `docker compose logs service_satellite` puis rebuild |
+| ❌ MongoDB connection failed | `docker compose restart db_satellite` |
+| ❌ MinIO error | Vérifier http://localhost:9001 |
+| ❌ Module not found | `docker compose build --no-cache service_satellite` |
+
+**Commandes debug:**
 ```powershell
-# Voir les erreurs
+# Voir erreurs
 docker compose logs service_satellite
 
-# Reconstruire
-docker compose build service_satellite
-docker compose up service_satellite
-```
-
-### **Erreur MongoDB:**
-```powershell
-# Vérifier que MongoDB est démarré
-docker compose ps db_satellite
-
-# Redémarrer MongoDB
-docker compose restart db_satellite
-
-# Vérifier connexion
-docker exec -it aquawatch-ms-db_satellite-1 mongosh
-```
-
-### **Erreur MinIO:**
-```powershell
-# Vérifier MinIO
-docker compose ps minio_storage
-
-# Accéder console
-# http://localhost:9001
-
-# Redémarrer
-docker compose restart minio_storage
-```
-
-### **Module Python manquant:**
-```powershell
-# Rebuild avec cache clear
+# Rebuild complet
 docker compose build --no-cache service_satellite
+
+# Restart tout
+docker compose restart
 ```
 
 ---
 
-## 📊 Base de données
+## 📊 Structure MongoDB
 
-### **Collection: `satellite_images`**
+**Collection:** `satellite_images`
 
-**Structure:**
 ```json
 {
-  "_id": ObjectId("..."),
   "image_id": "SAT001",
   "zone": {
     "latitude": 33.5731,
     "longitude": -7.5898,
     "rayon_km": 5
   },
-  "timestamp": ISODate("2025-11-24T10:00:00Z"),
+  "timestamp": "2025-11-24T10:00:00Z",
   "source": "Sentinel-2",
   "indices": {
     "chlorophylle": 0.8,
     "turbidite_satellite": 15.2,
-    "temperature_surface": 23.1,
     "ndwi": 0.45
   },
-  "file_path": "satellite-images/2025/11/SAT001.tiff",
+  "file_path": "satellite-images/SAT001.tiff",
   "processed": true
 }
 ```
 
-**Index recommandés:**
-```javascript
-db.satellite_images.createIndex({ "timestamp": -1 })
-db.satellite_images.createIndex({ "zone.latitude": 1, "zone.longitude": 1 })
-db.satellite_images.createIndex({ "processed": 1 })
-```
+---
+
+## 🎯 Roadmap
+
+| Phase | Statut | Tâches |
+|-------|--------|--------|
+| **Phase 1** ✅ | Terminé | API de base, MongoDB, MinIO, Health |
+| **Phase 2** ✅ | Terminé | Download, Processing, Calcul indices |
+| **Phase 3** 🔄 | En cours | Pipeline complet, Tests, Scheduler |
+| **Phase 4** 📝 | Prévu | Auth, Rate limit, Dashboard temps réel |
 
 ---
 
-## 🔮 Roadmap
+## 🤝 Intégration Facile
 
-### **Phase 1: API de base** ✅
-- [x] FastAPI application
-- [x] Connexion MongoDB
-- [x] Connexion MinIO
-- [x] Health check
-- [x] Endpoints mock data
-
-### **Phase 2: Traitement** ✅
-- [x] Modèles Pydantic
-- [x] Service téléchargement
-- [x] Service traitement
-- [x] Calcul indices (NDWI, Chlorophylle, Turbidité)
-
-### **Phase 3: Intégration complète** 🔄
-- [ ] Pipeline téléchargement → traitement → stockage
-- [ ] Scheduler pour téléchargements automatiques
-- [ ] Cache Redis pour performances
-- [ ] Tests unitaires et intégration
-- [ ] Monitoring et alertes
-
-### **Phase 4: Fonctionnalités avancées** 📝
-- [ ] Authentification API (JWT)
-- [ ] Rate limiting
-- [ ] WebSocket pour streaming
-- [ ] Export données (CSV, GeoJSON)
-- [ ] Dashboard temps réel
-
----
-
-## 🔗 Intégration avec autres services
-
-### **Pour Hamza (service_stmodel):**
+### **Pour Hamza (Machine Learning)**
 ```python
 import requests
 
-# Récupérer indices satellites
 response = requests.get(
     "http://service_satellite:8000/api/satellite/indices/latest",
     params={"limit": 10, "hours": 24}
 )
 
 indices = response.json()["indices"]
-
-# Utiliser pour prédictions ML
-for item in indices:
-    zone = item["zone"]
-    data = item["indices"]
-    # Traiter avec modèle ML...
+# ↓ Utiliser pour ton modèle ML
 ```
 
-### **Pour Yassin (service_api_sig):**
+### **Pour Yassin (Cartes SIG)**
 ```python
 import requests
 
-# Récupérer positions satellites
 response = requests.get(
-    "http://service_satellite:8000/api/satellite/images",
-    params={"limit": 100}
+    "http://service_satellite:8000/api/satellite/images"
 )
 
 images = response.json()["images"]
-
-# Afficher sur carte
-for img in images:
-    lat = img["zone"]["latitude"]
-    lon = img["zone"]["longitude"]
-    # Ajouter marker sur carte...
+# ↓ Afficher positions sur carte
 ```
 
 ---
 
-## 📝 Notes importantes
+## 📌 Notes Techniques
 
-### **Bandes Sentinel-2 utilisées:**
-- **B02 (Blue):** 490 nm - Détection eau
-- **B03 (Green):** 560 nm - Végétation aquatique
-- **B04 (Red):** 665 nm - Chlorophylle, turbidité
-- **B08 (NIR):** 842 nm - Biomasse, eau
+### **Bandes Sentinel-2**
+| Bande | Longueur d'onde | Utilisation |
+|-------|-----------------|-------------|
+| B02 (Blue) | 490 nm | Détection eau |
+| B03 (Green) | 560 nm | Végétation aquatique |
+| B04 (Red) | 665 nm | Chlorophylle, turbidité |
+| B08 (NIR) | 842 nm | Biomasse, NDWI |
 
-### **Limites actuelles:**
-- Température surface non disponible (nécessite bandes thermiques Landsat)
-- Téléchargement nécessite credentials SentinelHub
-- Traitement synchrone (prévoir async pour production)
-
-### **Recommandations production:**
-- Activer authentification API
-- Implémenter cache Redis
-- Ajouter monitoring (Prometheus + Grafana)
-- Scheduler pour téléchargements nocturnes
-- Backup automatique MongoDB
+### **⚠️ Limites Actuelles**
+- Température nécessite Landsat (bandes thermiques)
+- SentinelHub credentials requis pour téléchargement
+- Traitement synchrone (async prévu Phase 3)
 
 ---
 
-## 🤝 Support & Contact
+## 📞 Contact & Support
 
-**Développeur:** Bilal KHANTOURI  
-**Branche Git:** `dev_Bilal`  
-**Service:** Satellite (Images satellites)  
-**Dernière mise à jour:** 24 Novembre 2025
-
----
-
-## 📄 Licence
-
-Projet académique - EMSI 2025  
-AquaWatch - Système de monitoring qualité d'eau
+**👨‍💻 Développeur:** Bilal KHANTOURI  
+**🌿 Branche:** `dev_Bilal`  
+**📅 Version:** 1.0.0 (24 Nov 2025)  
+**🎓 Projet:** EMSI 2025 - AquaWatch
 
 ---
 
-**🚀 Service Satellite V1.0 - Production Ready!**
+<div align="center">
+
+**🚀 Service Satellite - Production Ready!**
+
+Made with ❤️ for clean water monitoring
+
+</div>
