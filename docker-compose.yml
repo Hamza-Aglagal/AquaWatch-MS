@@ -40,6 +40,8 @@ services:
   # BASE DÉDIÉE - Alertes + Cache (Yassin)
   db_alerts:
     image: postgres:14
+    env_file:
+      - .env
     environment:
       POSTGRES_USER: ${ALERTS_DB_USER}
       POSTGRES_PASSWORD: ${ALERTS_DB_PASSWORD}
@@ -158,6 +160,9 @@ services:
   # Service Alertes (Yassin)
   service_alertes:
     build: ./services/service_alertes
+    env_file:
+      - .env
+      - .env.alertes
     depends_on:
       - db_alerts
       - redis_queue
@@ -176,7 +181,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://${GEO_DB_USER}:${GEO_DB_PASSWORD}@db_geo:5432/${GEO_DB_NAME}
       - REDIS_URL=redis://redis_queue:6379
-      - CAPTEURS_API_URL=http://service_capteurs:8000
+      - CAPTEUR_API_URL=http://service_capteurs:8000
       - STMODEL_API_URL=http://service_stmodel:8000
     ports:
       - "8005:8000"

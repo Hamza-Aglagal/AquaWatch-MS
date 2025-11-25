@@ -5,7 +5,7 @@
 
 # Logs
 *.log
-logs/
+logs/ 
 
 # Data et volumes Docker (TOUTES les bases de données)
 infrastructure/db_*/data/

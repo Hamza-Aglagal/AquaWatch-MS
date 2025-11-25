@@ -297,77 +297,111 @@ git push origin dev_yassin
 
 ### **📋 FLUX SERVICE ALERTES** :
 
-#### **Étape 1 - Connecter à PostgreSQL**
+#### **Étape 1 - Connecter à PostgreSQL** ✅
 - **Outil** : `pg` (Node.js PostgreSQL client)
 - **Action** : Connexion à VOTRE base `alerts_db` port 5435
 - **Variables** : `DATABASE_URL=postgresql://alerts_user:alerts_pass_2025@db_alerts:5432/alerts_db`
+- **Status** : ✅ **VÉRIFIÉ** - Service connecté, tables créées (alerts, AlertRecipients, alert_recipients, alert_types, alert_deliveries)
 
-#### **Étape 2 - Configurer Redis listener**
+#### **Étape 2 - Configurer Redis listener** ✅
 - **Outil** : `redis` Node.js client
 - **Action** : S'abonner au canal "new_prediction" de Hamza
 - **URL** : `redis://redis_queue:6379`
+- **Status** : ✅ **VÉRIFIÉ** - Abonné actif au canal 'new_prediction', 1 subscriber détecté
 
-#### **Étape 3 - Traiter prédictions reçues**
+#### **Étape 3 - Traiter prédictions reçues** ✅
 - **Outil** : JavaScript JSON parsing
 - **Action** : Analyser score qualité et déterminer si alerte nécessaire
 - **Seuils** : Si qualité = "MAUVAISE" ou score < 4.0 → Déclencher alerte
+- **Status** : ✅ **VÉRIFIÉ** - Logique testée avec succès :
+  - ✓ qualite_eau='MAUVAISE' → Alerte créée
+  - ✓ score < 4.0 → Alerte créée
+  - ✓ qualite_eau='BONNE' ET score > 4.0 → Pas d'alerte
 
-#### **Étape 4 - Configurer Nodemailer**
+#### **Étape 4 - Configurer Nodemailer** ✅
 - **Outil** : `nodemailer` Node.js email client
 - **Action** : Configuration SMTP Gmail/Outlook avec credentials .env
 - **Variables** : `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD`
+- **Status** : ✅ **VÉRIFIÉ** - Variables SMTP configurées, transporter créé avec TLS tolérant en dev
 
-#### **Étape 5 - Envoyer notifications**
+> **Remarque** : Laisser l'**Étape 5 - Envoyer notifications** comme la DERNIÈRE étape du projet. La configuration SMTP et la mise en production des envois d'emails doivent être effectuées en dernier, une fois les autres fonctionnalités (Redis listener, traitement, stockage en base) stabilisées. Pendant le développement local, les envois sont désactivés par défaut et des méthodes de test (Ethereal) sont recommandées.
+
+#### **Étape 5 - Envoyer notifications** ✅
 - **Outil** : Nodemailer + templates HTML
 - **Action** : Envoyer emails à destinataires dans zone affectée
 - **Contenu** : Zone GPS, type alerte, score qualité, timestamp
+- **Status** : ✅ **VÉRIFIÉ** - Envoi désactivé par défaut (EMAIL_ENABLED non défini), prêt pour activation en production
+- **Configuration finale** : Définir `EMAIL_ENABLED=true` et fournir SMTP credentials valides pour activer l'envoi réel
 
-#### **Étape 6 - Stocker historique**
+#### **Étape 6 - Stocker historique** ✅
 - **Outil** : PostgreSQL `INSERT` dans table `alerts`
-- **Action** : Logger toutes alertes avec status envoi (sent/failed)
+- **Action** : Logger toutes alertes avec status envoi (pending/sent/failed)
 - **Traçabilité** : Pour audit et statistiques
+- **Status** : ✅ **COMPLÉTÉ** - Les alertes sont automatiquement stockées dans la base de données lors de leur création
 
-#### **Étape 7 - Exposer API historique**
+#### **Étape 7 - Exposer API historique** ✅
 - **Outil** : Express.js routes
 - **Action** : Endpoint `/api/alerts/history` pour consultation
 - **Filtres** : Par date, zone, type d'alerte
+- **Status** : ✅ **COMPLÉTÉ** - API disponible avec filtres optionnels
+- **Exemples d'utilisation** :
+  ```powershell
+  # Toutes les alertes
+  curl http://localhost:8004/api/alerts/history
+  
+  # Filtrer par type
+  curl "http://localhost:8004/api/alerts/history?type=QUALITE_EAU_MAUVAISE"
+  
+  # Filtrer par date
+  curl "http://localhost:8004/api/alerts/history?startDate=2025-11-20&endDate=2025-11-21"
+  
+  # Filtrer par zone (coordonnées exactes)
+  curl "http://localhost:8004/api/alerts/history?zone_latitude=34.02&zone_longitude=-6.84"
+  ```
 
 ### **📋 FLUX SERVICE API-SIG** :
 
-#### **Étape 1 - Connecter à PostGIS**
+#### **Étape 1 - Connecter à PostGIS** ✅
 - **Outil** : `pg` Node.js + PostGIS extension
 - **Action** : Connexion à VOTRE base `geo_db` port 5436
-- **Variables** : `DATABASE_URL=postgresql://geo_user:geo_pass_2025@db_geo:5432/geo_db`
+- **Variables** : `DATABASE_URL=postgresql://aquawatch_user:AquaWatch2024!@db_geo:5432/aquawatch_geo`
+- **Status** : ✅ **VÉRIFIÉ** - PostGIS connecté, 10 zones et 4 capteurs en base
 
-#### **Étape 2 - Configurer GeoServer**
+#### **Étape 2 - Configurer GeoServer** ✅
 - **Outil** : Interface web GeoServer http://localhost:8080/geoserver
 - **Action** : Créer workspace "aquawatch", connecter à PostGIS
 - **Credentials** : admin/aquawatch123
+- **Status** : ✅ **VÉRIFIÉ** - GeoServer accessible et opérationnel
 
-#### **Étape 3 - Publier couches WMS**
+#### **Étape 3 - Publier couches WMS** ⏳
 - **Outil** : GeoServer data stores + layer publishing
 - **Action** : Publier tables `zones_map`, `poi_map` comme couches WMS
 - **Styles** : Couleurs selon status qualité (vert/orange/rouge)
+- **Status** : ⏳ **EN ATTENTE** - Configuration manuelle GeoServer requise
 
-#### **Étape 4 - Récupérer données capteurs**
+#### **Étape 4 - Récupérer données capteurs** ⏳
 - **Outil** : `axios` Node.js HTTP client
 - **Action** : Appeler API positions de Bilal pour placer capteurs sur carte
 - **URL** : `http://service_capteurs:8000/api/capteurs/positions`
+- **Status** : ⏳ **EN ATTENTE** - Dépend du service capteurs de Bilal
 
-#### **Étape 5 - Écouter prédictions Redis**
+#### **Étape 5 - Écouter prédictions Redis** ⏳
 - **Outil** : Redis subscriber Node.js
 - **Action** : Mettre à jour couleurs zones selon nouvelles prédictions
-- **PostGIS** : `UPDATE zone_status SET status_color = 'red' WHERE zone_id = ...`
+- **PostGIS** : `UPDATE zones_map SET qualite_actuelle = 'BONNE' WHERE zone_id = ...`
+- **Status** : ⏳ **EN ATTENTE** - À implémenter après intégration avec service_stmodel
 
-#### **Étape 6 - Créer interface Leaflet**
+#### **Étape 6 - Créer interface Leaflet** ✅
 - **Outil** : Leaflet.js + HTML/CSS/JavaScript
-- **Action** : Carte interactive avec couches WMS GeoServer superposées
+- **Action** : Carte interactive OpenStreetMap avec zones et capteurs
 - **Interactions** : Click sur zone → Popup détails qualité
+- **Status** : ✅ **VÉRIFIÉ** - Interface accessible à http://localhost:8005
 
-#### **Étape 7 - Exposer API cartographique**
+#### **Étape 7 - Exposer API cartographique** ✅
 - **Outil** : Express.js routes + GeoJSON
 - **Action** : Endpoints REST `/api/map/zones` format GeoJSON
-- **Performance** : Cache résultats, requêtes spatiales optimisées
+- **Performance** : Requêtes spatiales optimisées avec index PostGIS
+- **Status** : ✅ **VÉRIFIÉ** - 6 endpoints API fonctionnels (zones, points, stats, zone-at, update-zone, health)
 
 ---
 
