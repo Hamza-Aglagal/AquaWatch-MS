@@ -3,6 +3,8 @@ const router = express.Router();
 const Zone = require('../models/Zone');
 const PointInteret = require('../models/PointInteret');
 const sequelize = require('../config/database');
+const capteurSyncService = require('../services/capteurSyncService');
+const predictionListener = require('../services/predictionListener');
 
 // 🗺️ GET /api/map/zones - Récupérer toutes les zones avec leur géométrie en GeoJSON
 router.get('/zones', async (req, res) => {
@@ -204,6 +206,58 @@ router.get('/stats', async (req, res) => {
         res.json(stats[0]);
     } catch (error) {
         console.error('❌ Erreur stats:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 🔄 POST /api/map/sync-capteurs - Synchroniser les capteurs depuis l'API de Bilal
+router.post('/sync-capteurs', async (req, res) => {
+    try {
+        console.log('📡 Starting capteur synchronization...');
+        const result = await capteurSyncService.syncCapteurs();
+        
+        if (result.success) {
+            res.json({
+                message: 'Synchronisation réussie',
+                ...result
+            });
+        } else {
+            res.status(503).json({
+                message: 'Service capteurs non disponible',
+                ...result
+            });
+        }
+    } catch (error) {
+        console.error('❌ Erreur sync capteurs:', error);
+        res.status(500).json({ 
+            error: error.message,
+            message: 'Erreur lors de la synchronisation des capteurs'
+        });
+    }
+});
+
+// 🔍 GET /api/map/capteur-api-status - Vérifier le statut de l'API capteurs
+router.get('/capteur-api-status', async (req, res) => {
+    try {
+        const status = await capteurSyncService.checkCapteurApiStatus();
+        res.json(status);
+    } catch (error) {
+        console.error('❌ Erreur vérification API capteurs:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// 📡 GET /api/map/redis-listener-status - Vérifier le statut du listener Redis
+router.get('/redis-listener-status', (req, res) => {
+    try {
+        const isActive = predictionListener.isActive();
+        res.json({
+            active: isActive,
+            channel: 'new_prediction',
+            status: isActive ? 'listening' : 'not_subscribed'
+        });
+    } catch (error) {
+        console.error('❌ Erreur vérification listener Redis:', error);
         res.status(500).json({ error: error.message });
     }
 });

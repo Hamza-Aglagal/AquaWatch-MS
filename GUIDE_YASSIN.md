@@ -361,40 +361,47 @@ git push origin dev_yassin
 
 ### **📋 FLUX SERVICE API-SIG** :
 
-#### **Étape 1 - Connecter à PostGIS**
+#### **Étape 1 - Connecter à PostGIS** ✅
 - **Outil** : `pg` Node.js + PostGIS extension
 - **Action** : Connexion à VOTRE base `geo_db` port 5436
-- **Variables** : `DATABASE_URL=postgresql://geo_user:geo_pass_2025@db_geo:5432/geo_db`
+- **Variables** : `DATABASE_URL=postgresql://aquawatch_user:AquaWatch2024!@db_geo:5432/aquawatch_geo`
+- **Status** : ✅ **VÉRIFIÉ** - PostGIS connecté, 10 zones et 4 capteurs en base
 
-#### **Étape 2 - Configurer GeoServer**
+#### **Étape 2 - Configurer GeoServer** ✅
 - **Outil** : Interface web GeoServer http://localhost:8080/geoserver
 - **Action** : Créer workspace "aquawatch", connecter à PostGIS
 - **Credentials** : admin/aquawatch123
+- **Status** : ✅ **VÉRIFIÉ** - GeoServer accessible et opérationnel
 
-#### **Étape 3 - Publier couches WMS**
+#### **Étape 3 - Publier couches WMS** ⏳
 - **Outil** : GeoServer data stores + layer publishing
 - **Action** : Publier tables `zones_map`, `poi_map` comme couches WMS
 - **Styles** : Couleurs selon status qualité (vert/orange/rouge)
+- **Status** : ⏳ **EN ATTENTE** - Configuration manuelle GeoServer requise
 
-#### **Étape 4 - Récupérer données capteurs**
+#### **Étape 4 - Récupérer données capteurs** ⏳
 - **Outil** : `axios` Node.js HTTP client
 - **Action** : Appeler API positions de Bilal pour placer capteurs sur carte
 - **URL** : `http://service_capteurs:8000/api/capteurs/positions`
+- **Status** : ⏳ **EN ATTENTE** - Dépend du service capteurs de Bilal
 
-#### **Étape 5 - Écouter prédictions Redis**
+#### **Étape 5 - Écouter prédictions Redis** ⏳
 - **Outil** : Redis subscriber Node.js
 - **Action** : Mettre à jour couleurs zones selon nouvelles prédictions
-- **PostGIS** : `UPDATE zone_status SET status_color = 'red' WHERE zone_id = ...`
+- **PostGIS** : `UPDATE zones_map SET qualite_actuelle = 'BONNE' WHERE zone_id = ...`
+- **Status** : ⏳ **EN ATTENTE** - À implémenter après intégration avec service_stmodel
 
-#### **Étape 6 - Créer interface Leaflet**
+#### **Étape 6 - Créer interface Leaflet** ✅
 - **Outil** : Leaflet.js + HTML/CSS/JavaScript
-- **Action** : Carte interactive avec couches WMS GeoServer superposées
+- **Action** : Carte interactive OpenStreetMap avec zones et capteurs
 - **Interactions** : Click sur zone → Popup détails qualité
+- **Status** : ✅ **VÉRIFIÉ** - Interface accessible à http://localhost:8005
 
-#### **Étape 7 - Exposer API cartographique**
+#### **Étape 7 - Exposer API cartographique** ✅
 - **Outil** : Express.js routes + GeoJSON
 - **Action** : Endpoints REST `/api/map/zones` format GeoJSON
-- **Performance** : Cache résultats, requêtes spatiales optimisées
+- **Performance** : Requêtes spatiales optimisées avec index PostGIS
+- **Status** : ✅ **VÉRIFIÉ** - 6 endpoints API fonctionnels (zones, points, stats, zone-at, update-zone, health)
 
 ---
 

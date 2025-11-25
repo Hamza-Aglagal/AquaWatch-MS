@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const sequelize = require('./config/database');
 const mapRoutes = require('./routes/mapRoutes');
+const predictionListener = require('./services/predictionListener');
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -32,6 +33,10 @@ sequelize.authenticate()
     })
     .then(() => {
         console.log('✅ Modèles synchronisés');
+        
+        // Démarrer le listener Redis pour les prédictions
+        predictionListener.start();
+        
         app.listen(PORT, () => {
             console.log(`🗺️  Service API-SIG en écoute sur le port ${PORT}`);
             console.log(`📍 Carte interactive: http://localhost:${PORT}`);

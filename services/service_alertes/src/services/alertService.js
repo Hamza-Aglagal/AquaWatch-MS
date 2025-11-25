@@ -33,26 +33,37 @@ class AlertService {
 
             // Find active recipients for this zone
             const recipients = await AlertRecipient.findAll({ where: { is_active: true } });
+            console.log(`Found ${recipients.length} active recipients`);
 
             // If email sending is enabled, attempt deliveries and collect results
             if (process.env.EMAIL_ENABLED === 'true') {
+                console.log('EMAIL_ENABLED is true, attempting to send emails...');
                 let failCount = 0;
+                let successCount = 0;
+                
                 for (const recipient of recipients) {
                     try {
+                        console.log(`Sending email to: ${recipient.email}`);
                         await this.sendEmailNotification(recipient.email, alert);
-                        // Optionally record per-recipient delivery in future
+                        successCount += 1;
+                        console.log(`✅ Email sent successfully to: ${recipient.email}`);
                     } catch (err) {
                         failCount += 1;
-                        console.error('Notify error for', recipient.email, err);
+                        console.error(`❌ Failed to send email to ${recipient.email}:`, err.message);
                     }
                 }
 
+                console.log(`Email delivery summary: ${successCount} sent, ${failCount} failed out of ${recipients.length} total`);
+
                 // Set alert status based on delivery results
                 if (recipients.length === 0) {
+                    console.log('No recipients found, marking alert as failed');
                     await alert.update({ status: 'failed' });
-                } else if (failCount > 0) {
+                } else if (failCount > 0 && successCount === 0) {
+                    console.log('All emails failed, marking alert as failed');
                     await alert.update({ status: 'failed' });
-                } else {
+                } else if (successCount > 0) {
+                    console.log('At least one email sent successfully, marking alert as sent');
                     await alert.update({ status: 'sent' });
                 }
             } else {
@@ -174,9 +185,13 @@ class AlertService {
         }
 
         try {
-            await this.transporter.sendMail(mailOptions);
+            console.log(`Attempting to send email to ${email}...`);
+            const info = await this.transporter.sendMail(mailOptions);
+            console.log(`Email sent successfully! Message ID: ${info.messageId}`);
+            return info;
         } catch (error) {
-            console.error('Error sending email:', error);
+            console.error(`Error sending email to ${email}:`, error.message);
+            console.error('Full error:', error);
             throw error;
         }
     }

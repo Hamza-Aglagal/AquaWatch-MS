@@ -12,6 +12,19 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
+// Root route
+app.get('/', (req, res) => {
+    res.json({ 
+        service: 'AquaWatch Service Alertes',
+        version: '1.0.0',
+        status: 'running',
+        endpoints: {
+            health: '/health',
+            alertHistory: '/api/alerts/history'
+        }
+    });
+});
+
 // Health check
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', service: 'alertes' });

@@ -165,7 +165,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://${GEO_DB_USER}:${GEO_DB_PASSWORD}@db_geo:5432/${GEO_DB_NAME}
       - REDIS_URL=redis://redis_queue:6379
-      - CAPTEURS_API_URL=http://service_capteurs:8000
+      - CAPTEUR_API_URL=http://service_capteurs:8000
       - STMODEL_API_URL=http://service_stmodel:8000
     ports:
       - "8005:8000"

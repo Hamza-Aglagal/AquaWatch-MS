@@ -32,11 +32,21 @@ const PointInteret = sequelize.define('PointInteret', {
     },
     capteur_id: {
         type: DataTypes.STRING(50),
+        unique: true,
         comment: 'ID du capteur (si type=capteur)'
     },
     description: {
         type: DataTypes.TEXT,
         comment: 'Description du point'
+    },
+    type_capteur: {
+        type: DataTypes.STRING(50),
+        comment: 'Type de capteur (QUALITE_EAU, TEMPERATURE, etc.)'
+    },
+    status: {
+        type: DataTypes.STRING(20),
+        defaultValue: 'ACTIF',
+        comment: 'Statut du capteur (ACTIF, INACTIF, MAINTENANCE)'
     },
     actif: {
         type: DataTypes.BOOLEAN,
