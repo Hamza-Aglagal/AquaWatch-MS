@@ -54,18 +54,8 @@ const PointInteret = sequelize.define('PointInteret', {
     }
 }, {
     tableName: 'poi_map',
-    timestamps: false,
-    indexes: [
-        {
-            name: 'idx_poi_position',
-            type: 'SPATIAL',
-            fields: ['position']
-        },
-        {
-            name: 'idx_poi_type',
-            fields: ['type']
-        }
-    ]
+    timestamps: false
+    // Indexes created by init.sql (GIST index not supported by Sequelize)
 });
 
 module.exports = PointInteret;

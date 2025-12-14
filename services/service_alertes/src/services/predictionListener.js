@@ -71,22 +71,39 @@ class PredictionListener {
     });
   }
 
+  /**
+   * Convert numeric score to quality category
+   */
+  scoreToQuality(score) {
+    if (score >= 7.0) return 'BONNE';
+    if (score >= 4.0) return 'MOYENNE';
+    return 'MAUVAISE';
+  }
+
   async handlePrediction(prediction) {
-    if (
-      prediction.predictions.qualite_eau === 'MAUVAISE' ||
-      prediction.predictions.score_qualite < 4.0
-    ) {
+    // Support both nested format (new) and flat format (legacy)
+    const latitude = prediction.zone?.latitude || prediction.latitude;
+    const longitude = prediction.zone?.longitude || prediction.longitude;
+    const qualite_eau = prediction.predictions?.qualite_eau || this.scoreToQuality(prediction.quality_score_real || prediction.quality_score * 10);
+    const score_qualite = prediction.predictions?.score_qualite || prediction.quality_score_real || (prediction.quality_score * 10);
+
+    console.log(`📊 Processing prediction: quality=${qualite_eau}, score=${score_qualite}, location=[${latitude}, ${longitude}]`);
+
+    if (qualite_eau === 'MAUVAISE' || score_qualite < 4.0) {
       const alertData = {
         prediction_id: prediction.prediction_id,
-        zone_latitude: prediction.zone.latitude,
-        zone_longitude: prediction.zone.longitude,
+        zone_latitude: latitude,
+        zone_longitude: longitude,
         type: 'QUALITE_EAU_MAUVAISE',
-        message: `Alerte : Qualité eau dégradée dans la zone [${prediction.zone.latitude}, ${prediction.zone.longitude}]`,
-        score_qualite: prediction.predictions.score_qualite,
-        severity: 'medium'
+        message: `Alerte : Qualité eau dégradée dans la zone [${latitude}, ${longitude}]`,
+        score_qualite: score_qualite,
+        severity: score_qualite < 2.0 ? 'high' : 'medium'
       };
 
+      console.log(`🚨 Creating alert for degraded water quality`);
       await alertService.createAlert(alertData);
+    } else {
+      console.log(`✅ Water quality OK - no alert needed`);
     }
   }
 }

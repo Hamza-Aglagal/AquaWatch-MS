@@ -16,13 +16,14 @@ services:
   db_satellite:
     image: mongo:6.0
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${SATELLITE_DB_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${SATELLITE_DB_PASSWORD}
-      MONGO_INITDB_DATABASE: ${SATELLITE_DB_NAME}
+      MONGO_INITDB_ROOT_USERNAME: ${SATELLITE_DB_USER:-satellite_user}
+      MONGO_INITDB_ROOT_PASSWORD: ${SATELLITE_DB_PASSWORD:-satellite_pass_2025}
+      MONGO_INITDB_DATABASE: ${SATELLITE_DB_NAME:-satellite_db}
     ports:
       - "27017:27017"
     volumes:
       - ./infrastructure/db_satellite/data:/data/db
+      - ./infrastructure/db_satellite/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
 
   # BASE DÉDIÉE - STModel Predictions (Hamza)
   db_predictions:
@@ -137,7 +138,7 @@ services:
       - minio_storage
       - redis_queue
     environment:
-      - MONGODB_URL=mongodb://${SATELLITE_DB_USER}:${SATELLITE_DB_PASSWORD}@db_satellite:27017/${SATELLITE_DB_NAME}
+      - MONGODB_URL=mongodb://${SATELLITE_DB_USER}:${SATELLITE_DB_PASSWORD}@db_satellite:27017/${SATELLITE_DB_NAME}?authSource=admin
       - MINIO_URL=http://minio_storage:9000
       - REDIS_URL=redis://redis_queue:6379
     ports:
@@ -179,6 +180,11 @@ services:
       - db_geo
       - redis_queue
     environment:
+      - DB_NAME=${GEO_DB_NAME}
+      - DB_USER=${GEO_DB_USER}
+      - DB_PASSWORD=${GEO_DB_PASSWORD}
+      - DB_HOST=db_geo
+      - DB_PORT=5432
       - DATABASE_URL=postgresql://${GEO_DB_USER}:${GEO_DB_PASSWORD}@db_geo:5432/${GEO_DB_NAME}
       - REDIS_URL=redis://redis_queue:6379
       - CAPTEUR_API_URL=http://service_capteurs:8000

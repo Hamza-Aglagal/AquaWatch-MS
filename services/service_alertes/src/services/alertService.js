@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const { Op } = require('sequelize');
+const { v4: uuidv4 } = require('uuid');
 const Alert = require('../models/Alert');
 const AlertRecipient = require('../models/AlertRecipient');
 
@@ -22,10 +23,22 @@ class AlertService {
 
     async createAlert(alertData) {
         try {
+            // Generate alert_id if not present
+            if (!alertData.alert_id) {
+                alertData.alert_id = `ALERT_${Date.now()}_${uuidv4().slice(0,8)}`;
+            }
+            
             // Ensure required DB columns are present (severity is NOT NULL in DB)
             if (!alertData.severity) {
                 alertData.severity = 'medium';
             }
+            
+            // Store extra data in alert_data JSONB field
+            alertData.alert_data = {
+                type: alertData.type,
+                message: alertData.message,
+                score_qualite: alertData.score_qualite
+            };
 
             // Create alert in database (initial status is 'pending')
             const alert = await Alert.create(alertData);

@@ -8,18 +8,15 @@ const AlertRecipient = sequelize.define('AlertRecipient', {
         autoIncrement: true
     },
     email: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        validate: {
-            isEmail: true
-        }
+        type: DataTypes.STRING(255),
+        allowNull: true
     },
     phone: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(20),
         allowNull: true
     },
     name: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(100),
         allowNull: true
     },
     zone_latitude: {
@@ -36,16 +33,16 @@ const AlertRecipient = sequelize.define('AlertRecipient', {
     },
     is_active: {
         type: DataTypes.BOOLEAN,
-        defaultValue: true,
-        field: 'is_active'
+        defaultValue: true
+    },
+    created_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
     }
 }, {
     tableName: 'alert_recipients',
-    underscored: true,
-    freezeTableName: true,
-    timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: false
+    timestamps: false,
+    freezeTableName: true
 });
 
 module.exports = AlertRecipient;

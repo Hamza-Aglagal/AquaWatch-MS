@@ -23,6 +23,10 @@ seaborn>=0.12.0
 # Communications
 requests==2.31.0
 redis==5.0.1
+httpx==0.27.0
 
 # Traitement données temporelles
 scipy>=1.11.0
+
+# Données satellites (Google Earth Engine)
+earthengine-api==0.1.384

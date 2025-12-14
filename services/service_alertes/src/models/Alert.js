@@ -2,51 +2,53 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
 const Alert = sequelize.define('Alert', {
-    alert_id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        primaryKey: true
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
     },
-    prediction_id: {
-        type: DataTypes.STRING,
+    alert_id: {
+        type: DataTypes.STRING(50),
+        unique: true,
         allowNull: false
     },
+    prediction_id: {
+        type: DataTypes.STRING(50),
+        allowNull: true
+    },
     zone_latitude: {
-        type: DataTypes.FLOAT,
+        type: DataTypes.DECIMAL(10, 8),
         allowNull: false
     },
     zone_longitude: {
-        type: DataTypes.FLOAT,
+        type: DataTypes.DECIMAL(11, 8),
         allowNull: false
     },
-    type: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    message: {
-        type: DataTypes.TEXT,
-        allowNull: false
+    alert_data: {
+        type: DataTypes.JSONB,
+        allowNull: true
     },
     severity: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(20),
         allowNull: false,
         defaultValue: 'medium'
     },
     status: {
-        type: DataTypes.ENUM('pending', 'sent', 'failed'),
+        type: DataTypes.STRING(20),
         defaultValue: 'pending'
     },
-    score_qualite: {
-        type: DataTypes.FLOAT,
+    created_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
+    },
+    sent_at: {
+        type: DataTypes.DATE,
         allowNull: true
     }
 }, {
     tableName: 'alerts',
-    underscored: true,
-    freezeTableName: true,
-    timestamps: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at'
+    timestamps: false,
+    freezeTableName: true
 });
 
 module.exports = Alert;

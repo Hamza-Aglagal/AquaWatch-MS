@@ -44,6 +44,15 @@ class PredictionListener {
     }
 
     /**
+     * Convert numeric score to quality category
+     */
+    scoreToQuality(score) {
+        if (score >= 7.0) return 'BONNE';
+        if (score >= 4.0) return 'MOYENNE';
+        return 'MAUVAISE';
+    }
+
+    /**
      * Traite une nouvelle prédiction et met à jour la zone correspondante
      * @param {string} message - Message JSON de la prédiction
      */
@@ -68,14 +77,17 @@ class PredictionListener {
                 return;
             }
 
-            // Valider la structure de la prédiction
-            if (!prediction.zone || !prediction.predictions) {
-                console.warn('⚠️  Invalid prediction structure');
+            // Support both nested format (new) and flat format (legacy)
+            const latitude = prediction.zone?.latitude || prediction.latitude;
+            const longitude = prediction.zone?.longitude || prediction.longitude;
+            const qualite_eau = prediction.predictions?.qualite_eau || this.scoreToQuality(prediction.quality_score_real || prediction.quality_score * 10);
+            const score_qualite = prediction.predictions?.score_qualite || prediction.quality_score_real || (prediction.quality_score * 10);
+
+            // Validate we have coordinates
+            if (!latitude || !longitude) {
+                console.warn('⚠️  Invalid prediction structure - missing coordinates');
                 return;
             }
-
-            const { latitude, longitude } = prediction.zone;
-            const { qualite_eau, score_qualite } = prediction.predictions;
 
             console.log(`📍 Prediction for zone [${latitude}, ${longitude}]: ${qualite_eau} (score: ${score_qualite})`);
 

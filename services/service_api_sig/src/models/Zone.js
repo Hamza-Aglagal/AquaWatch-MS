@@ -48,18 +48,8 @@ const Zone = sequelize.define('Zone', {
     }
 }, {
     tableName: 'zones_map',
-    timestamps: false,
-    indexes: [
-        {
-            name: 'idx_zone_geometry',
-            type: 'SPATIAL',
-            fields: ['geometry']
-        },
-        {
-            name: 'idx_zone_qualite',
-            fields: ['qualite_actuelle']
-        }
-    ]
+    timestamps: false
+    // Indexes created by init.sql (GIST index not supported by Sequelize)
 });
 
 module.exports = Zone;

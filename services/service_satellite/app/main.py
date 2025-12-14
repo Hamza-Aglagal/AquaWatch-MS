@@ -87,8 +87,8 @@ def health_check():
         "status": "ok",
         "service": "satellite",
         "version": "1.0.0",
-        "mongodb": "connected" if Database.db else "disconnected",
-        "minio": "connected" if MinIOStorage.client else "disconnected"
+        "mongodb": "connected" if Database.db is not None else "disconnected",
+        "minio": "connected" if MinIOStorage.client is not None else "disconnected"
     }
 
 

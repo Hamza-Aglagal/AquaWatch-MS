@@ -10,14 +10,16 @@ class Database:
     @classmethod
     def connect(cls, max_retries=5, retry_delay=3):
         """Connexion à MongoDB avec retry logic"""
+        # Use authSource=admin for MongoDB with root user initialization
         mongo_url = os.getenv(
             "MONGODB_URL",
-            "mongodb://satellite_user:satellite_pass@db_satellite:27017/satellite_db"
+            "mongodb://satellite_user:satellite_pass_2025@db_satellite:27017/satellite_db?authSource=admin"
         )
         
         for attempt in range(1, max_retries + 1):
             try:
                 print(f"[MongoDB] Tentative de connexion {attempt}/{max_retries}...")
+                print(f"[MongoDB] URL: {mongo_url.replace('satellite_pass_2025', '****')}")
                 cls.client = MongoClient(mongo_url, serverSelectionTimeoutMS=5000)
                 # Test connexion
                 cls.client.admin.command('ping')
@@ -31,6 +33,12 @@ class Database:
                     time.sleep(retry_delay)
                 else:
                     print(f"❌ [MongoDB] Échec après {max_retries} tentatives")
+                    raise
+            except Exception as e:
+                print(f"⚠️ [MongoDB] Erreur: {e}")
+                if attempt < max_retries:
+                    time.sleep(retry_delay)
+                else:
                     raise
     
     @classmethod

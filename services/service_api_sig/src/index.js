@@ -25,6 +25,11 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Dashboard professionnel AquaWatch
+app.get('/dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+
 // Connexion à la base de données et démarrage du serveur
 sequelize.authenticate()
     .then(() => {

@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaWatch-MS - Historique des Alertes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            color: white;
+            padding: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .navbar-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            height: 60px;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            text-decoration: none;
+            color: white;
+        }
+
+        .navbar-brand i {
+            font-size: 1.5rem;
+        }
+
+        .navbar-menu {
+            display: flex;
+            gap: 0;
+            list-style: none;
+            height: 100%;
+        }
+
+        .navbar-menu li {
+            height: 100%;
+        }
+
+        .navbar-menu a {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            padding: 0 1.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .navbar-menu a:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .navbar-menu a.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.15);
+            border-bottom-color: #60a5fa;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        .page-header {
+            background: white;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Actions Bar */
+        .actions-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 1.25rem 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .filter-btn:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .export-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.5rem;
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+        }
+
+        /* Table */
+        .table-container {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+
+        th {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.875rem;
+        }
+
+        tbody tr {
+            transition: background 0.2s;
+        }
+
+        tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge.critique {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge.moyen {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge.faible {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* Status badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.375rem 0.875rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-badge.en-cours {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-badge.en-cours::before {
+            content: '';
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 50%;
+            background: #f59e0b;
+        }
+
+        .status-badge.en-attente {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .status-badge.en-attente::before {
+            content: '';
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 50%;
+            background: #6366f1;
+        }
+
+        .status-badge.resolu {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-badge.resolu::before {
+            content: '';
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 50%;
+            background: #10b981;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-top: 1.5rem;
+        }
+
+        .pagination-info {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .pagination-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .page-btn {
+            padding: 0.5rem 1rem;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
+        .page-btn.active {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Date column */
+        .date-cell {
+            color: #64748b;
+        }
+
+        .time {
+            display: block;
+            font-size: 0.75rem;
+            margin-top: 0.125rem;
+        }
+
+        /* Zone column */
+        .zone-name {
+            font-weight: 500;
+            color: #1e293b;
+        }
+
+        /* Message column */
+        .alert-message {
+            color: #475569;
+            max-width: 400px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="#" class="navbar-brand">
+                <i class="fas fa-water"></i>
+                AquaWatch-MS
+            </a>
+            <ul class="navbar-menu">
+                <li><a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                <li><a href="carte.html"><i class="fas fa-map"></i> Carte</a></li>
+                <li><a href="alertes.html" class="active"><i class="fas fa-bell"></i> Alertes</a></li>
+                <li><a href="parametres.html"><i class="fas fa-cog"></i> Paramètres</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1><i class="fas fa-bell"></i> Historique des Alertes</h1>
+        </div>
+
+        <!-- Actions Bar -->
+        <div class="actions-bar">
+            <button class="filter-btn" onclick="toggleFilters()">
+                <i class="fas fa-filter"></i>
+                Filtrer
+            </button>
+            <button class="export-btn" onclick="exportCSV()">
+                <i class="fas fa-download"></i>
+                Exporter CSV
+            </button>
+        </div>
+
+        <!-- Table -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Zone</th>
+                        <th>Niveau</th>
+                        <th>Message</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody id="alertsTableBody">
+                    <tr>
+                        <td class="date-cell">
+                            08/12/2025
+                            <span class="time">14:30</span>
+                        </td>
+                        <td class="zone-name">Lac Bin el Ouidane</td>
+                        <td><span class="badge critique">Critique</span></td>
+                        <td class="alert-message">Turbidité élevée détectée - Score: 2.1</td>
+                        <td><span class="status-badge en-cours">En cours</span></td>
+                    </tr>
+                    <tr>
+                        <td class="date-cell">
+                            08/12/2025
+                            <span class="time">09:15</span>
+                        </td>
+                        <td class="zone-name">Oued Sebou</td>
+                        <td><span class="badge moyen">Moyen</span></td>
+                        <td class="alert-message">Baisse du pH - Score: 5.8</td>
+                        <td><span class="status-badge en-attente">En attente</span></td>
+                    </tr>
+                    <tr>
+                        <td class="date-cell">
+                            07/12/2025
+                            <span class="time">18:45</span>
+                        </td>
+                        <td class="zone-name">Oued Tensift</td>
+                        <td><span class="badge moyen">Moyen</span></td>
+                        <td class="alert-message">Température anormale - 24°C</td>
+                        <td><span class="status-badge resolu">Résolu</span></td>
+                    </tr>
+                    <tr>
+                        <td class="date-cell">
+                            07/12/2025
+                            <span class="time">11:20</span>
+                        </td>
+                        <td class="zone-name">Barrage Idriss Ier</td>
+                        <td><span class="badge faible">Faible</span></td>
+                        <td class="alert-message">Capteur de conductivité déconnecté</td>
+                        <td><span class="status-badge resolu">Résolu</span></td>
+                    </tr>
+                    <tr>
+                        <td class="date-cell">
+                            06/12/2025
+                            <span class="time">16:00</span>
+                        </td>
+                        <td class="zone-name">Oued Bouregreg</td>
+                        <td><span class="badge critique">Critique</span></td>
+                        <td class="alert-message">Pollution chimique détectée</td>
+                        <td><span class="status-badge resolu">Résolu</span></td>
+                    </tr>
+                    <tr>
+                        <td class="date-cell">
+                            06/12/2025
+                            <span class="time">08:30</span>
+                        </td>
+                        <td class="zone-name">Lac Sidi Mohamed</td>
+                        <td><span class="badge moyen">Moyen</span></td>
+                        <td class="alert-message">Oxygène dissous faible - 4.2 mg/L</td>
+                        <td><span class="status-badge resolu">Résolu</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            <div class="pagination-info">
+                Affichage de 1 à 6 sur 6 résultats
+            </div>
+            <div class="pagination-buttons">
+                <button class="page-btn" disabled>Précédent</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn" disabled>Suivant</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Export CSV function
+        function exportCSV() {
+            const table = document.querySelector('table');
+            let csv = [];
+            
+            // Headers
+            const headers = Array.from(table.querySelectorAll('thead th'))
+                .map(th => th.textContent.trim());
+            csv.push(headers.join(','));
+            
+            // Rows
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const cols = Array.from(row.querySelectorAll('td'))
+                    .map(td => {
+                        // Clean text content
+                        return '"' + td.textContent.trim().replace(/\n/g, ' ').replace(/\s+/g, ' ') + '"';
+                    });
+                csv.push(cols.join(','));
+            });
+            
+            // Download
+            const csvContent = csv.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `alertes_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Toggle filters
+        function toggleFilters() {
+            alert('Filters panel - To be implemented');
+        }
+
+        // Load alerts from API
+        async function loadAlerts() {
+            try {
+                const response = await fetch('http://localhost:8004/api/alerts/history');
+                const data = await response.json();
+                
+                if (data.alerts && data.alerts.length > 0) {
+                    renderAlerts(data.alerts);
+                }
+            } catch (error) {
+                console.error('Error loading alerts:', error);
+            }
+        }
+
+        function renderAlerts(alerts) {
+            const tbody = document.getElementById('alertsTableBody');
+            tbody.innerHTML = '';
+            
+            alerts.forEach(alert => {
+                const date = new Date(alert.created_at);
+                const dateStr = date.toLocaleDateString('fr-FR');
+                const timeStr = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                
+                const severity = alert.severity || 'info';
+                const severityMap = {
+                    high: 'critique',
+                    medium: 'moyen',
+                    low: 'faible'
+                };
+                const badgeClass = severityMap[severity] || 'faible';
+                
+                const statusMap = {
+                    active: 'en-cours',
+                    pending: 'en-attente',
+                    resolved: 'resolu'
+                };
+                const statusClass = statusMap[alert.status] || 'en-attente';
+                const statusLabel = {
+                    'en-cours': 'En cours',
+                    'en-attente': 'En attente',
+                    'resolu': 'Résolu'
+                }[statusClass];
+                
+                const severityLabel = badgeClass.charAt(0).toUpperCase() + badgeClass.slice(1);
+                
+                const row = `
+                    <tr>
+                        <td class="date-cell">
+                            ${dateStr}
+                            <span class="time">${timeStr}</span>
+                        </td>
+                        <td class="zone-name">${alert.zone_name || 'Zone inconnue'}</td>
+                        <td><span class="badge ${badgeClass}">${severityLabel}</span></td>
+                        <td class="alert-message">${alert.message}</td>
+                        <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // Load on page load
+        // loadAlerts();
+    </script>
+</body>
+</html>
