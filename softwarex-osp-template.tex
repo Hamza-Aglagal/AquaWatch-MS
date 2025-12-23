@@ -1,0 +1,376 @@
+%% 
+%% Copyright 2007, 2008, 2009 Elsevier Ltd
+%% 
+%% This file is part of the 'Elsarticle Bundle'.
+%% ---------------------------------------------
+%% 
+%% It may be distributed under the conditions of the LaTeX Project Public
+%% License, either version 1.2 of this license or (at your option) any
+%% later version.  The latest version of this license is in
+%%    http://www.latex-project.org/lppl.txt
+%% and version 1.2 or later is part of all distributions of LaTeX
+%% version 1999/12/01 or later.
+%% 
+%% The list of all files belonging to the 'Elsarticle Bundle' is
+%% given in the file `manifest.txt'.
+%% 
+
+%% Template article for Elsevier's document class `elsarticle'
+%% with numbered style bibliographic references
+%% SP 2008/03/01
+
+\documentclass[preprint,12pt, a4paper]{elsarticle}
+
+%% Use the option review to obtain double line spacing
+%% \documentclass[authoryear,preprint,review,12pt]{elsarticle}
+
+%% For including figures, graphicx.sty has been loaded in
+%% elsarticle.cls. If you prefer to use the old commands
+%% please give \usepackage{epsfig}
+
+%% The amssymb package provides various useful mathematical symbols
+\usepackage{amssymb}
+\usepackage{hyperref}
+\setlength{\parindent}{0pt}
+%% The amsthm package provides extended theorem environments
+%% \usepackage{amsthm}
+
+%% The lineno packages adds line numbers. Start line numbering with
+%% \begin{linenumbers}, end it with \end{linenumbers}. Or switch it on
+%% for the whole article with \linenumbers.
+%\usepackage{lineno}
+
+\journal{SoftwareX}
+
+\begin{document}
+\renewcommand{\labelenumii}{\arabic{enumi}.\arabic{enumii}}
+
+\begin{frontmatter}
+%--- INSTRUCTIONS TO BE DELETED OR COMMENTED BEFORE SUBMISSION 
+
+  {\large\textbf{SoftwareX article template Version 4 (November 2023)}}
+  Before you complete this template, a few important points to note:
+  \begin{itemize}
+\item	This template is for an original SoftwareX article. If you are submitting an update to a software article that has already been published, please use the Software Update Template found on the Guide for Authors page.
+\item	The format of a software article is very different to a traditional research article. To help you write yours, we have created this template. We will only consider software articles submitted using this template.
+\item	It is mandatory to publicly share the code/software referred to in your software article. You’ll find information on our software sharing criteria in the SoftwareX \href{https://www.elsevier.com/journals/softwarex/2352-7110/guide-for-authors}{Guide for Authors}.  
+\item	It’s important to consult the \href{https://www.elsevier.com/journals/softwarex/2352-7110/guide-for-authors}{Guide for Authors} when preparing your manuscript; it highlights mandatory requirements and is packed with useful advice.
+\end{itemize}
+%
+Still got questions?
+Email our editorial team at softwarex@elsevier.com.
+
+\textbf{Now you are ready to fill in the template below. As you complete each section, please carefully read the associated instructions. All sections are mandatory, unless marked optional.
+Once you have completed the template, delete these instructions. In addition, please delete the instructions in the template (the text written in italics).}
+%--- END OF INSTRUCTIONS TO BE DELETED OR COMMENTED BEFORE SUBMISSION 
+ 
+%% Title, authors and addresses
+
+%% use the tnoteref command within \title for footnotes;
+%% use the tnotetext command for theassociated footnote;
+%% use the fnref command within \author or \address for footnotes;
+%% use the fntext command for theassociated footnote;
+%% use the corref command within \author for corresponding author footnotes;
+%% use the cortext command for theassociated footnote;
+%% use the ead command for the email address,
+%% and the form \ead[url] for the home page:
+%% \title{Title\tnoteref{label1}}
+%% \tnotetext[label1]{}
+%% \author{Name\corref{cor1}\fnref{label2}}
+%% \ead{email address}
+%% \ead[url]{home page}
+%% \fntext[label2]{}
+%% \cortext[cor1]{}
+%% \address{Address\fnref{label3}}
+%% \fntext[label3]{}
+
+\title{AquaWatch-MS: A Microservices-Based Water Quality Monitoring System}
+
+%% use optional labels to link authors explicitly to addresses:
+%% \author[label1,label2]{}
+%% \address[label1]{}
+%% \address[label2]{}
+
+\author[label1]{Bilal Elkhantouri}
+\author[label2]{Hamza Aglagal}
+\author[label3]{Yassin Ouhadi}
+\address[label1]{EMSI Casablanca, Morocco, bilal.elkhantouri@emsi.ma}
+\address[label2]{EMSI Casablanca, Morocco, hamza.aglagal@emsi.ma}
+\address[label3]{EMSI Casablanca, Morocco, yassin.ouhadi@emsi.ma}
+
+\begin{abstract}
+%% Text of abstract 
+AquaWatch-MS is a microservices-based platform for real-time water quality monitoring and prediction. The system integrates IoT sensor data with satellite imagery to provide comprehensive water quality assessment. It uses machine learning models for spatiotemporal predictions and automatically generates alerts when water quality deteriorates. The platform consists of five independent microservices managing sensors, satellite data, ML predictions, alerts, and geospatial visualization, all orchestrated via Docker Compose.
+\end{abstract}
+
+\begin{keyword}
+%% keywords here, in the form: keyword \sep keyword
+water quality monitoring \sep microservices \sep machine learning \sep IoT sensors \sep satellite imagery \sep real-time alerts
+
+%% PACS codes here, in the form: \PACS code \sep code
+
+%% MSC codes here, in the form: \MSC code \sep code
+%% or \MSC[2008] code \sep code (2000 is the default)
+
+\end{keyword}
+
+\end{frontmatter}
+
+%\linenumbers
+
+\section*{Metadata}
+\label{}
+\textit{The ancillary data table~\ref{codeMetadata} is required for the sub-version of the codebase. Please replace the italicized text in the right column with the correct information about your current code and leave the left column untouched.}
+
+\begin{table}[!h]
+\begin{tabular}{|l|p{6.5cm}|p{6.5cm}|}
+\hline
+\textbf{Nr.} & \textbf{Code metadata description} & \textbf{Metadata} \\
+\hline
+C1 & Current code version & v1.0 \\
+\hline
+C2 & Permanent link to code/repository used for this code version & \url{https://github.com/Hamza-Aglagal/AquaWatch-MS} \\
+\hline
+C3  & Permanent link to Reproducible Capsule & N/A\\
+\hline
+C4 & Legal Code License   & MIT License \\
+\hline
+C5 & Code versioning system used & Git \\
+\hline
+C6 & Software code languages, tools, and services used & Python 3.10, Node.js 20, JavaScript, PostgreSQL 14, MongoDB 6.0, Docker, PyTorch 2.4, FastAPI, Express.js, Leaflet.js, Redis, TimescaleDB \\
+\hline
+C7 & Compilation requirements, operating environments \& dependencies & Docker 20+, Docker Compose 2.0+, 8GB RAM minimum, Linux/Windows/MacOS \\
+\hline
+C8 & If available Link to developer documentation/manual & \url{https://github.com/Hamza-Aglagal/AquaWatch-MS/blob/development/README.md} \\
+\hline
+C9 & Support email for questions & hamza.aglagal@emsi.ma \\
+\hline
+\end{tabular}
+\caption{Code metadata (mandatory)}
+\label{codeMetadata} 
+\end{table}
+
+\textit{Optionally, you can provide information about the current executable
+software version filling in the left column of
+Table~\ref{executabelMetadata}. Please leave the first column as it is.}
+
+\begin{table}[!h]
+\begin{tabular}{|l|p{6.5cm}|p{6.5cm}|}
+\hline
+\textbf{Nr.} & \textbf{(Executable) software metadata description} & \textbf{Please fill in this column} \\
+\hline
+S1 & Current software version & v1.0 \\
+\hline
+S2 & Permanent link to executables of this version  & \url{https://github.com/Hamza-Aglagal/AquaWatch-MS/releases} \\
+\hline
+S3  & Permanent link to Reproducible Capsule & N/A \\
+\hline
+S4 & Legal Software License & MIT License \\
+\hline
+S5 & Computing platforms/Operating Systems & Linux, Windows, MacOS (via Docker containers) \\
+\hline
+S6 & Installation requirements \& dependencies & Docker 20+, Docker Compose 2.0+, 8GB RAM minimum \\
+\hline
+S7 & If available, link to user manual - if formally published include a reference to the publication in the reference list & \url{https://github.com/Hamza-Aglagal/AquaWatch-MS/blob/development/README.md} \\
+\hline
+S8 & Support email for questions & hamza.aglagal@emsi.ma \\
+\hline
+\end{tabular}
+\caption{Software metadata (optional)}
+\label{executabelMetadata} 
+\end{table}
+
+
+\section{Motivation and significance}
+
+Water quality monitoring is critical for environmental protection and public health. Traditional monitoring methods rely on periodic manual sampling, which is time-consuming and provides limited spatial coverage. AquaWatch-MS addresses these challenges by combining real-time IoT sensor data with satellite imagery for continuous monitoring.
+
+\textbf{Scientific Problem:} The software solves the problem of real-time water quality assessment at scale by integrating multiple data sources and providing predictive capabilities using machine learning.
+
+\textbf{Contribution:} The system enables early detection of water quality deterioration through automated alerts, allowing for timely interventions. It combines spatiotemporal machine learning models with geospatial visualization for comprehensive monitoring.
+
+\textbf{Usage:} Users interact with web-based dashboards displaying real-time sensor data, satellite indices (NDWI, chlorophyll, turbidity), and quality predictions on interactive maps. Administrators receive automatic email alerts when water quality drops below acceptable thresholds.
+
+\textbf{Related Work:} The system uses ConvLSTM neural networks for spatiotemporal prediction, similar to approaches in environmental monitoring. It leverages Sentinel-2 satellite imagery from Copernicus program and implements TimescaleDB for efficient time-series data management.
+
+\section{Software description}
+
+AquaWatch-MS is built as a microservices architecture with five independent services communicating via REST APIs and Redis pub/sub messaging.
+
+\subsection{Software architecture}
+
+The system consists of:
+
+\begin{enumerate}
+\item \textbf{Service Capteurs (Port 8001):} Node.js service managing IoT sensors. Stores time-series data in TimescaleDB and simulates real-time measurements via MQTT.
+
+\item \textbf{Service Satellite (Port 8002):} Python/FastAPI service processing Sentinel-2 imagery. Calculates water quality indices (NDWI, chlorophyll, turbidity) and stores results in MongoDB with MinIO S3 storage.
+
+\item \textbf{Service STModel (Port 8003):} Python service running PyTorch ConvLSTM models for spatiotemporal water quality predictions. Fetches data from Services 1 and 2, generates predictions, and publishes to Redis.
+
+\item \textbf{Service Alertes (Port 8004):} Node.js service listening to Redis for predictions. Automatically sends email alerts via Nodemailer when water quality is poor.
+
+\item \textbf{Service API-SIG (Port 8005):} Node.js service with PostGIS for geospatial data. Provides Leaflet.js web interfaces for interactive map visualization.
+\end{enumerate}
+
+All services are containerized with Docker and orchestrated via Docker Compose with dedicated PostgreSQL, MongoDB, and Redis instances.
+
+ \subsection{Software functionalities}
+
+Key functionalities:
+
+\begin{itemize}
+\item Real-time sensor data collection and storage (pH, temperature, turbidity, oxygen, conductivity)
+\item Satellite imagery processing and water quality index calculation
+\item Spatiotemporal ML predictions using historical sensor and satellite data
+\item Automatic email alerts for water quality deterioration
+\item Interactive web maps with real-time quality visualization
+\item RESTful APIs for data access and integration
+\item Historical data analysis and statistics
+\end{itemize}
+  
+ \subsection{Sample code snippets analysis (optional)}
+
+
+\section{Illustrative examples}
+
+\textbf{Example 1: Sensor Data Query}
+
+Users can retrieve the latest sensor measurements:
+
+\texttt{GET http://localhost:8001/api/capteurs/latest}
+
+Returns JSON with pH, temperature, turbidity, oxygen, and conductivity for all active sensors.
+
+\textbf{Example 2: Satellite Index Calculation}
+
+Fetch water quality indices for a geographic location:
+
+\texttt{GET http://localhost:8002/api/satellite/indices/location?lat=33.5731\&lon=-7.5898}
+
+Returns NDWI (water presence), chlorophyll concentration, and turbidity from Sentinel-2 imagery.
+
+\textbf{Example 3: ML Prediction}
+
+Generate water quality prediction:
+
+\texttt{POST http://localhost:8003/api/predict}
+
+Body: \texttt{\{"latitude": 33.5731, "longitude": -7.5898\}}
+
+Returns predicted water quality (EXCELLENTE, BONNE, MOYENNE, MAUVAISE) with confidence score.
+
+\textbf{Example 4: Interactive Map}
+
+Access web interface at \texttt{http://localhost:8005/carte.html} to view:
+\begin{itemize}
+\item Color-coded zones (green=good, orange=medium, red=poor)
+\item Sensor locations as markers
+\item Real-time statistics and quality scores
+\end{itemize}
+
+\section{Impact}
+
+\textbf{New Research Questions:}
+\begin{itemize}
+\item How can multi-source data fusion (IoT + satellite) improve water quality prediction accuracy?
+\item What is the optimal spatiotemporal resolution for early detection of water quality anomalies?
+\item How can microservices architecture improve scalability in environmental monitoring systems?
+\end{itemize}
+
+\textbf{Improvement to Existing Research:}
+
+AquaWatch-MS improves traditional water monitoring by:
+\begin{itemize}
+\item Reducing monitoring costs through automated data collection and processing
+\item Increasing spatial coverage by combining ground sensors with satellite imagery
+\item Enabling real-time predictions instead of reactive monitoring
+\item Providing open-source, reproducible implementation of spatiotemporal ML models
+\end{itemize}
+
+\textbf{Changes to Daily Practice:}
+
+\begin{itemize}
+\item Environmental agencies can receive automatic alerts instead of periodic manual checks
+\item Researchers can access historical data via REST APIs for analysis
+\item Decision-makers can visualize water quality trends on interactive maps
+\item The modular architecture allows easy integration with existing monitoring infrastructure
+\end{itemize}
+
+\textbf{Current Usage:}
+
+The software is currently deployed as a demonstration system for the EMSI Casablanca academic project. It serves as an educational platform for microservices architecture, machine learning integration, and environmental monitoring systems. The codebase is publicly available on GitHub for academic and research purposes.
+
+\textbf{Potential Applications:}
+
+\begin{itemize}
+\item Municipal water management agencies
+\item Environmental research institutions
+\item Smart city initiatives
+\item Agricultural water quality monitoring
+\item Aquaculture management systems
+\end{itemize}
+
+\section{Conclusions}
+
+AquaWatch-MS demonstrates an effective approach to water quality monitoring by combining IoT sensors, satellite imagery, and machine learning in a microservices architecture. The system provides real-time monitoring, predictive capabilities, and automated alerts, addressing key limitations of traditional monitoring methods.
+
+The modular design allows independent scaling and maintenance of each service, making it suitable for deployment in various contexts from small research projects to large-scale environmental monitoring networks. Future work includes integrating additional data sources, improving ML model accuracy, and expanding geographical coverage.
+
+The open-source nature of the project encourages community contributions and adaptations for different water quality monitoring scenarios.
+
+\section*{Acknowledgements}
+\label{}
+We thank EMSI Casablanca for providing the infrastructure and support for this project. We also acknowledge the Copernicus program for providing free access to Sentinel-2 satellite imagery.
+
+
+%% The Appendices part is started with the command \appendix;
+%% appendix sections are then done as normal sections
+%% \appendix
+
+%% \section{}
+%% \label{}
+
+%% References:
+%% If you have bibdatabase file and want bibtex to generate the
+%% bibitems, please use
+%%
+%%  \bibliographystyle{elsarticle-num} 
+%%  \bibliography{<your bibdatabase>}
+
+%% else use the following coding to input the bibitems directly in the
+%% TeX file.
+
+\begin{thebibliography}{00}
+
+%% \bibitem{label}
+%% Text of bibliographic item
+
+\bibitem{} Use this style of ordering. References in-text should also use a similar style.
+
+\end{thebibliography}
+
+\textit{If the software repository you used supplied a DOI or another
+Persistent IDentifier (PID), please add a reference for your software
+here. For more guidance on software citation, please see our guide for
+authors or \href{https://f1000research.com/articles/9-1257/v2}{this
+  article on the essentials of software citation by FORCE 11}, of
+which Elsevier is a member.}
+
+\large{\textbf{Reminder: Before you submit, please delete all 
+the instructions in this document, 
+including this paragraph. 
+Thank you!}}
+
+
+
+
+\end{document}
+\endinput
+%%
+%% End of file `SoftwareX_article_template.tex'.
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
