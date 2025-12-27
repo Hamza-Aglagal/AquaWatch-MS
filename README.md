@@ -302,3 +302,7 @@ Ce projet est sous licence **MIT** - voir [LICENSE](LICENSE) pour détails.
 ---
 
 **🌊 AquaWatch-MS - Pour une eau plus propre, des décisions plus éclairées ! 🌊**
+Video : 
+
+https://github.com/user-attachments/assets/8a46b2f1-a95b-4b98-ac15-a31ef53d7424
+
