@@ -68,9 +68,7 @@ ON CONFLICT (type_code) DO NOTHING;
 
 -- Destinataires par défaut (équipe projet)
 INSERT INTO alert_recipients (email, name, zone_latitude, zone_longitude, alert_radius_km) VALUES
-('hamza.aglagal@example.com', 'Hamza Aglagal', 34.020882, -6.841650, 50),
-('bilal.dev@example.com', 'Bilal Developer', 33.606892, -7.639133, 50),
-('yassin.dev@example.com', 'Yassin Developer', 34.037732, -4.999448, 50)
+('yassineouhadi99@gmail.com', 'Yacine Ouhadi', 34.020882, -6.841650, 50),
 ON CONFLICT DO NOTHING;
 
 -- Vue pour alertes actives

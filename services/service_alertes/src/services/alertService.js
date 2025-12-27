@@ -100,6 +100,12 @@ class AlertService {
     }
 
     async sendEmailNotification(email, alert) {
+        // Extract data from alert_data JSONB field (or use fallbacks)
+        const alertData = alert.alert_data || {};
+        const alertType = alertData.type || alert.type || 'ALERT';
+        const alertMessage = alertData.message || alert.message || 'Alerte qualité eau détectée';
+        const scoreQualite = alertData.score_qualite || alert.score_qualite || 'N/A';
+
         // Format date in French locale
         const dateOptions = { 
             year: 'numeric', 
@@ -151,8 +157,8 @@ class AlertService {
                         </div>
                         <div class="content">
                             <div class="alert-box">
-                                <h3>⚠️ ${alert.type.replace(/_/g, ' ')}</h3>
-                                <p>${alert.message}</p>
+                                <h3>⚠️ ${alertType.replace(/_/g, ' ')}</h3>
+                                <p>${alertMessage}</p>
                             </div>
                             
                             <div class="info-row">
@@ -167,7 +173,7 @@ class AlertService {
                             </div>
                             
                             <div class="info-row">
-                                <span class="label">📊 Score Qualité:</span> ${alert.score_qualite}/10
+                                <span class="label">📊 Score Qualité:</span> ${scoreQualite}/10
                             </div>
                             
                             <div class="info-row">

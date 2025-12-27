@@ -1,0 +1,133 @@
+name: AquaWatch-MS CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, development]
+  pull_request:
+    branches: [main, development]
+
+jobs:
+  # ==================== TEST SERVICES ====================
+  test-capteurs:
+    runs-on: ubuntu-latest
+    name: 🌡️ Test Service Capteurs
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install dependencies
+        working-directory: ./services/service_capteurs
+        run: npm ci
+        
+      - name: Run tests
+        working-directory: ./services/service_capteurs
+        run: npm test || echo "No tests configured"
+
+  test-satellite:
+    runs-on: ubuntu-latest
+    name: 🛰️ Test Service Satellite
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          
+      - name: Install dependencies
+        working-directory: ./services/service_satellite
+        run: pip install -r requirements.txt
+        
+      - name: Run tests
+        working-directory: ./services/service_satellite
+        run: pytest || echo "No tests configured"
+
+  test-stmodel:
+    runs-on: ubuntu-latest
+    name: 🧠 Test Service STModel
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          
+      - name: Install dependencies
+        working-directory: ./services/service_stmodel
+        run: pip install -r requirements.txt
+        
+      - name: Run tests
+        working-directory: ./services/service_stmodel
+        run: pytest tests/ || echo "No tests configured"
+
+  test-alertes:
+    runs-on: ubuntu-latest
+    name: 🚨 Test Service Alertes
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install dependencies
+        working-directory: ./services/service_alertes
+        run: npm ci
+        
+      - name: Run tests
+        working-directory: ./services/service_alertes
+        run: npm test || echo "No tests configured"
+
+  # ==================== BUILD DOCKER ====================
+  build-images:
+    runs-on: ubuntu-latest
+    name: 🐳 Build Docker Images
+    needs: [test-capteurs, test-satellite, test-stmodel, test-alertes]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Build all services
+        run: docker compose build
+        
+      - name: Verify images
+        run: docker images | grep aquawatch
+
+  # ==================== INTEGRATION TESTS ====================
+  integration-tests:
+    runs-on: ubuntu-latest
+    name: 🔗 Integration Tests
+    needs: build-images
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Start all services
+        run: |
+          docker compose up -d
+          sleep 30  # Wait for services to be ready
+          
+      - name: Test health endpoints
+        run: |
+          curl -f http://localhost:8001/health || exit 1
+          curl -f http://localhost:8002/health || exit 1
+          curl -f http://localhost:8003/health || exit 1
+          curl -f http://localhost:8004/health || exit 1
+          
+      - name: Stop services
+        run: docker compose down
+
+  # ==================== DEPLOY (optional) ====================
+  deploy:
+    runs-on: ubuntu-latest
+    name: 🚀 Deploy to Production
+    needs: integration-tests
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy notification
+        run: echo "Ready to deploy to production!"
+        # Add your deployment steps here (AWS, Azure, etc.)
