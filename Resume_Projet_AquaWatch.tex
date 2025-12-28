@@ -1,0 +1,827 @@
+\documentclass[12pt,a4paper]{article}
+
+% ==================== PACKAGES ====================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{tcolorbox}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% ==================== CONFIGURATION ====================
+\geometry{margin=2cm}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=cyan}
+
+% Couleurs personnalisées
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\definecolor{aquablue}{RGB}{0,119,182}
+\definecolor{alertred}{RGB}{230,57,70}
+\definecolor{successgreen}{RGB}{40,167,69}
+
+% Configuration des listings
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{codepurple},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codegreen},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    frame=single
+}
+\lstset{style=mystyle}
+
+% Configuration des boîtes
+\tcbuselibrary{skins,breakable}
+
+% En-têtes et pieds de page
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textbf{AquaWatch-MS}}
+\fancyhead[R]{Résumé du Projet}
+\fancyfoot[C]{\thepage}
+
+% ==================== DOCUMENT ====================
+\begin{document}
+
+% ==================== PAGE DE TITRE ====================
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    
+    {\Huge\textbf{\textcolor{aquablue}{AquaWatch-MS}}}\\[0.5cm]
+    {\Large\textit{Plateforme Modulaire de Surveillance et Prédiction\\de la Qualité de l'Eau}}
+    
+    \vspace{1.5cm}
+    
+    \begin{tcolorbox}[colback=aquablue!10, colframe=aquablue, width=0.9\textwidth]
+        \centering
+        \textbf{Architecture Microservices | Machine Learning | IoT | SIG}
+    \end{tcolorbox}
+    
+    \vspace{2cm}
+    
+    \begin{tabular}{ll}
+        \textbf{Équipe:} & \\
+        $\bullet$ Hamza & STModel + Infrastructure \\
+        $\bullet$ Bilal & Capteurs + Satellite \\
+        $\bullet$ Yassin & Alertes + API-SIG \\
+    \end{tabular}
+    
+    \vspace{2cm}
+    
+    {\large EMSI - 5ème Année}\\
+    {\large Module: ML + DM + Microservices}\\[0.5cm]
+    {\large Décembre 2025}
+    
+    \vfill
+\end{titlepage}
+
+% ==================== TABLE DES MATIÈRES ====================
+\tableofcontents
+\newpage
+
+% ==================== SECTION 1: PRÉSENTATION GÉNÉRALE ====================
+\section{Présentation Générale du Projet}
+
+\subsection{Objectif Principal}
+\begin{tcolorbox}[colback=successgreen!10, colframe=successgreen, title=\textbf{Mission d'AquaWatch}]
+Développer une \textbf{plateforme automatisée} pour:
+\begin{itemize}[noitemsep]
+    \item \textbf{Surveiller} la qualité de l'eau en temps réel via capteurs IoT et données satellites
+    \item \textbf{Prédire} les variations à court terme avec des modèles spatio-temporels (LSTM)
+    \item \textbf{Alerter} automatiquement en cas de dépassement des seuils OMS
+    \item \textbf{Visualiser} l'état des masses d'eau sur interface cartographique
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Contexte et Problématique}
+La surveillance de la qualité de l'eau est cruciale pour:
+\begin{itemize}
+    \item La santé publique (normes OMS)
+    \item La protection environnementale
+    \item La gestion des ressources hydriques
+\end{itemize}
+
+\textbf{Problématique:} Comment automatiser la surveillance et anticiper les problèmes de qualité d'eau en combinant:
+\begin{enumerate}
+    \item Données IoT temps réel (capteurs)
+    \item Images satellites (Sentinel-2, Copernicus)
+    \item Intelligence artificielle (prédiction)
+\end{enumerate}
+
+\subsection{Zones Pilotes au Maroc}
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Zone} & \textbf{Type} & \textbf{Coordonnées} \\
+\hline
+Casablanca & Urbaine côtière & 33.5731, -7.5898 \\
+Rabat & Capitale & 34.0209, -6.8416 \\
+Agadir & Côtière & 30.4278, -9.5981 \\
+Tanger & Port & 35.7595, -5.8340 \\
+\hline
+\end{tabular}
+\end{center}
+
+% ==================== SECTION 2: ARCHITECTURE ====================
+\section{Architecture Microservices}
+
+\subsection{Vue d'Ensemble}
+
+\begin{tcolorbox}[colback=blue!5, colframe=aquablue, title=\textbf{Architecture 5 Services}]
+\begin{center}
+\begin{tikzpicture}[node distance=2cm, auto, thick]
+    % Nodes
+    \node[draw, rectangle, fill=orange!30, minimum width=2.5cm, minimum height=1cm] (capteurs) {Capteurs\\Port 8001};
+    \node[draw, rectangle, fill=cyan!30, minimum width=2.5cm, minimum height=1cm, right of=capteurs, xshift=2cm] (satellite) {Satellite\\Port 8002};
+    \node[draw, rectangle, fill=purple!30, minimum width=2.5cm, minimum height=1cm, below of=capteurs, xshift=2cm] (stmodel) {STModel\\Port 8003};
+    \node[draw, rectangle, fill=red!30, minimum width=2.5cm, minimum height=1cm, below of=stmodel, xshift=-2cm] (alertes) {Alertes\\Port 8004};
+    \node[draw, rectangle, fill=green!30, minimum width=2.5cm, minimum height=1cm, below of=stmodel, xshift=2cm] (sig) {API-SIG\\Port 8005};
+    
+    % Arrows
+    \draw[->] (capteurs) -- (stmodel);
+    \draw[->] (satellite) -- (stmodel);
+    \draw[->] (stmodel) -- (alertes);
+    \draw[->] (stmodel) -- (sig);
+\end{tikzpicture}
+\end{center}
+\end{tcolorbox}
+
+\subsection{Description des 5 Microservices}
+
+\subsubsection{Service Capteurs (Port 8001) - Bilal}
+\begin{itemize}
+    \item \textbf{Rôle:} Collecte des données IoT temps réel
+    \item \textbf{Technologies:} Node.js, Express.js, TimescaleDB
+    \item \textbf{Paramètres mesurés:} pH, température, turbidité, oxygène dissous
+    \item \textbf{Communication:} MQTT (simulation) + API REST
+    \item \textbf{Base de données:} TimescaleDB (hypertables pour séries temporelles)
+\end{itemize}
+
+\subsubsection{Service Satellite (Port 8002) - Bilal}
+\begin{itemize}
+    \item \textbf{Rôle:} Traitement images satellites Sentinel-2
+    \item \textbf{Technologies:} Python, FastAPI, MongoDB, MinIO
+    \item \textbf{Indices calculés:}
+    \begin{itemize}
+        \item NDWI (Normalized Difference Water Index): Détection eau
+        \item Chlorophylle: Mesure algues
+        \item Turbidité satellite: Clarté de l'eau
+    \end{itemize}
+    \item \textbf{Stockage:} MongoDB (métadonnées) + MinIO (images)
+\end{itemize}
+
+\subsubsection{Service STModel (Port 8003) - Hamza}
+\begin{itemize}
+    \item \textbf{Rôle:} Prédiction qualité eau via Machine Learning
+    \item \textbf{Technologies:} Python, FastAPI, PyTorch, PostgreSQL
+    \item \textbf{Modèle:} LSTM (Long Short-Term Memory)
+    \item \textbf{Input:} 14 jours d'historique (capteurs + satellites)
+    \item \textbf{Output:} Score de qualité prédit (jour 15)
+\end{itemize}
+
+\subsubsection{Service Alertes (Port 8004) - Yassin}
+\begin{itemize}
+    \item \textbf{Rôle:} Gestion et envoi d'alertes automatiques
+    \item \textbf{Technologies:} Node.js, Express.js, PostgreSQL, Redis
+    \item \textbf{Types d'alertes:}
+    \begin{itemize}
+        \item WATER\_QUALITY\_BAD: Qualité dégradée
+        \item PH\_CRITICAL: pH dangereux (<6 ou >9)
+        \item POLLUTION\_RISK: Risque détecté par ML
+        \item SENSOR\_OFFLINE: Capteur hors ligne
+    \end{itemize}
+    \item \textbf{Canaux:} Email, SMS, Webhooks
+\end{itemize}
+
+\subsubsection{Service API-SIG (Port 8005) - Yassin}
+\begin{itemize}
+    \item \textbf{Rôle:} Interface cartographique interactive
+    \item \textbf{Technologies:} Next.js, PostGIS, Leaflet.js
+    \item \textbf{Fonctionnalités:}
+    \begin{itemize}
+        \item Carte interactive des zones
+        \item Visualisation qualité par couleur
+        \item API GeoJSON
+    \end{itemize}
+\end{itemize}
+
+\subsection{Infrastructure et Bases de Données}
+
+\begin{center}
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{Service} & \textbf{Base de Données} & \textbf{Port} & \textbf{Type} \\
+\hline
+Capteurs & TimescaleDB & 5433 & Séries temporelles \\
+Satellite & MongoDB & 27017 & Documents \\
+STModel & PostgreSQL & 5434 & Relationnel \\
+Alertes & PostgreSQL & 5435 & Relationnel \\
+API-SIG & PostGIS & 5436 & Géospatial \\
+\hline
+\multicolumn{4}{|l|}{\textbf{Services communs:}} \\
+\hline
+Redis & Cache & 6379 & File de messages \\
+MinIO & Stockage objets & 9000/9001 & S3-compatible \\
+GeoServer & Cartographie & 8080 & WMS/WFS \\
+\hline
+\end{tabular}
+\end{center}
+
+% ==================== SECTION 3: TECHNOLOGIES ====================
+\section{Stack Technologique}
+
+\subsection{Backend}
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Technologie} & \textbf{Usage} & \textbf{Service} \\
+\hline
+Node.js + Express.js & API REST & Capteurs, Alertes \\
+Python + FastAPI & API REST + ML & Satellite, STModel \\
+Sequelize & ORM Node.js & Capteurs, Alertes \\
+SQLAlchemy & ORM Python & STModel \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Machine Learning}
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Technologie} & \textbf{Usage} \\
+\hline
+PyTorch 2.4.1 & Framework Deep Learning \\
+PyTorch Lightning & Entraînement simplifié \\
+Scikit-learn & Prétraitement, métriques \\
+NumPy & Calcul numérique \\
+Pandas & Manipulation données \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Bases de Données}
+\begin{itemize}
+    \item \textbf{TimescaleDB:} Extension PostgreSQL optimisée pour séries temporelles (hypertables)
+    \item \textbf{MongoDB:} Base NoSQL pour documents JSON (images satellites)
+    \item \textbf{PostgreSQL:} Base relationnelle classique
+    \item \textbf{PostGIS:} Extension PostgreSQL pour données géospatiales
+    \item \textbf{Redis:} Cache et file de messages entre services
+\end{itemize}
+
+\subsection{DevOps et Infrastructure}
+\begin{itemize}
+    \item \textbf{Docker + Docker Compose:} Conteneurisation des services
+    \item \textbf{MinIO:} Stockage compatible S3 pour images satellites
+    \item \textbf{GeoServer:} Serveur de données cartographiques
+    \item \textbf{Git + GitFlow:} Gestion de versions
+\end{itemize}
+
+\subsection{Frontend}
+\begin{itemize}
+    \item \textbf{Next.js:} Framework React pour API-SIG
+    \item \textbf{Leaflet.js:} Cartes interactives
+    \item \textbf{Chart.js:} Graphiques de données
+    \item \textbf{WebSockets:} Temps réel
+\end{itemize}
+
+% ==================== SECTION 4: MODÈLE ML ====================
+\section{Modèle de Machine Learning (STModel)}
+
+\subsection{Architecture du Modèle LSTM}
+
+\begin{tcolorbox}[colback=purple!5, colframe=purple!70, title=\textbf{Architecture WaterQualityLSTM}]
+\begin{lstlisting}[language=Python]
+class WaterQualityLSTM(nn.Module):
+    def __init__(self, input_size=11, hidden_size=64, num_layers=2):
+        super(WaterQualityLSTM, self).__init__()
+        
+        # LSTM 2 couches avec dropout
+        self.lstm = nn.LSTM(
+            input_size=input_size,    # 11 features
+            hidden_size=hidden_size,  # 64 neurones
+            num_layers=num_layers,    # 2 couches
+            batch_first=True,
+            dropout=0.2
+        )
+        
+        # Couche finale
+        self.fc = nn.Linear(hidden_size, 1)
+\end{lstlisting}
+\end{tcolorbox}
+
+\subsection{Features d'Entrée (11 paramètres)}
+
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Type} & \textbf{Feature} & \textbf{Description} \\
+\hline
+\multirow{8}{*}{Capteurs (8)} & pH & Acidité de l'eau \\
+& oxygene\_dissous & O2 dans l'eau \\
+& COD & Demande chimique en oxygène \\
+& CODMn & COD au permanganate \\
+& NH4N & Ammonium \\
+& TPH & Phosphore total \\
+& DIP & Phosphore inorganique dissous \\
+& DIN & Azote inorganique dissous \\
+\hline
+\multirow{3}{*}{Satellites (3)} & NDWI & Index différentiel normalisé eau \\
+& chlorophyll\_index & Indice chlorophylle \\
+& turbidity\_index & Indice turbidité \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Pipeline de Prétraitement}
+
+\begin{enumerate}
+    \item \textbf{Nettoyage:} Suppression valeurs manquantes/aberrantes
+    \item \textbf{Fusion:} Combinaison données capteurs + satellites
+    \item \textbf{Interpolation temporelle:} Alignement des dates
+    \item \textbf{Normalisation:} MinMaxScaler (valeurs entre 0 et 1)
+    \item \textbf{Création séquences:} Fenêtre glissante de 14 jours
+\end{enumerate}
+
+\subsection{Configuration d'Entraînement}
+
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Paramètre} & \textbf{Valeur} \\
+\hline
+Fonction de perte & MSE (Mean Squared Error) \\
+Optimiseur & Adam \\
+Learning Rate & 0.001 \\
+Scheduler & ReduceLROnPlateau (patience=5) \\
+Batch Size & 32 \\
+Epochs & 50 \\
+Early Stopping & 10 epochs sans amélioration \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Résultats du Modèle}
+
+\begin{tcolorbox}[colback=successgreen!10, colframe=successgreen, title=\textbf{Métriques de Performance}]
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Métrique} & \textbf{Valeur} & \textbf{Interprétation} \\
+\hline
+\textbf{MSE} & 0.0083 & Erreur quadratique très faible \\
+\textbf{RMSE} & 0.0909 & Erreur moyenne ~9\% \\
+\textbf{MAE} & 0.0545 & Erreur absolue ~5.5\% \\
+\textbf{R²} & \textbf{0.7003} & 70\% variance expliquée \\
+\textbf{Test Loss} & 0.0080 & Bonne généralisation \\
+\hline
+\end{tabular}
+\end{center}
+\end{tcolorbox}
+
+\textbf{Interprétation:}
+\begin{itemize}
+    \item \textbf{R² = 0.70:} Le modèle explique 70\% de la variance des données, ce qui est un bon score pour des données environnementales complexes
+    \item \textbf{RMSE < 0.1:} L'erreur de prédiction est inférieure à 10\%, acceptable pour un système d'alerte
+    \item \textbf{Pas de surapprentissage:} Test loss proche de training loss
+\end{itemize}
+
+\subsection{Division des Données}
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Dataset} & \textbf{Pourcentage} & \textbf{Taille} \\
+\hline
+Train & 70\% & ~1729 séquences \\
+Validation & 15\% & ~370 séquences \\
+Test & 15\% & ~370 séquences \\
+\hline
+\end{tabular}
+\end{center}
+
+% ==================== SECTION 5: FLUX DE DONNÉES ====================
+\section{Flux de Données et Communication}
+
+\subsection{Workflow Global}
+
+\begin{enumerate}
+    \item \textbf{Collecte:} Service Capteurs reçoit données MQTT des IoT
+    \item \textbf{Traitement:} Service Satellite télécharge et analyse images Sentinel-2
+    \item \textbf{Fusion:} STModel récupère données via API REST
+    \item \textbf{Prédiction:} LSTM génère score qualité pour J+1
+    \item \textbf{Publication:} Résultat publié sur Redis
+    \item \textbf{Alertes:} Service Alertes consomme Redis et notifie si seuil dépassé
+    \item \textbf{Visualisation:} API-SIG affiche sur carte interactive
+\end{enumerate}
+
+\subsection{Seuils OMS Surveillés}
+
+\begin{center}
+\begin{tabular}{|l|l|l|l|}
+\hline
+\textbf{Paramètre} & \textbf{Seuil OMS} & \textbf{Unité} & \textbf{Source} \\
+\hline
+pH & 6.5 - 8.5 & - & Capteurs \\
+Turbidité & < 4.0 & NTU & Capteurs + Satellite \\
+Température & < 25.0 & °C & Capteurs \\
+Chlorophylle & Variable & mg/m³ & Satellite \\
+NDWI & 0.0 - 1.0 & - & Satellite \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Communication Inter-Services}
+
+\begin{itemize}
+    \item \textbf{Synchrone:} API REST (HTTP/JSON)
+    \item \textbf{Asynchrone:} Redis Pub/Sub
+    \item \textbf{Temps réel:} WebSockets
+    \item \textbf{Format:} JSON, GeoJSON
+\end{itemize}
+
+% ==================== SECTION 6: API ENDPOINTS ====================
+\section{API Endpoints Principaux}
+
+\subsection{Service Capteurs (8001)}
+\begin{lstlisting}
+GET  /health                    # Health check
+GET  /api/capteurs              # Liste capteurs
+GET  /api/capteurs/positions    # GPS capteurs (pour carte)
+GET  /api/capteurs/data/latest  # Dernieres mesures (pour ML)
+POST /api/capteurs/mesures      # Ajouter mesure
+\end{lstlisting}
+
+\subsection{Service Satellite (8002)}
+\begin{lstlisting}
+GET  /health                         # Health check
+GET  /api/satellite/indices/latest   # Derniers indices
+GET  /api/satellite/images           # Liste images
+\end{lstlisting}
+
+\subsection{Service STModel (8003)}
+\begin{lstlisting}
+GET  /health                    # Health check
+GET  /api/model/info            # Info modele (architecture, metriques)
+POST /api/predictions/create    # Creer prediction (14 mesures)
+GET  /api/predictions/latest    # Dernieres predictions
+\end{lstlisting}
+
+\subsection{Service Alertes (8004)}
+\begin{lstlisting}
+GET  /health                    # Health check
+GET  /api/alerts/history        # Historique alertes
+POST /api/alerts                # Creer alerte manuelle
+\end{lstlisting}
+
+\subsection{Service API-SIG (8005)}
+\begin{lstlisting}
+GET  /health                    # Health check
+GET  /api/zones                 # Zones geographiques
+GET  /api/zones/[id]/quality    # Qualite par zone
+\end{lstlisting}
+
+% ==================== SECTION 7: DÉPLOIEMENT ====================
+\section{Déploiement et Exécution}
+
+\subsection{Prérequis}
+\begin{itemize}
+    \item Docker Desktop (obligatoire)
+    \item Git
+    \item Node.js 20+
+    \item Python 3.12+
+\end{itemize}
+
+\subsection{Commandes de Démarrage}
+\begin{lstlisting}[language=bash]
+# Cloner le projet
+git clone https://github.com/Hamza-Aglagal/AquaWatch-MS.git
+cd AquaWatch-MS
+
+# Configuration
+copy .env.template .env
+
+# Lancer infrastructure
+docker compose up db_capteurs db_satellite db_predictions 
+    db_alerts db_geo redis_queue minio_storage -d
+
+# Lancer tous les services
+docker compose up -d
+
+# Verifier logs
+docker compose logs -f service_stmodel
+\end{lstlisting}
+
+\subsection{URLs d'Accès}
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Service} & \textbf{URL} \\
+\hline
+Capteurs API & http://localhost:8001 \\
+Satellite API & http://localhost:8002 \\
+STModel API & http://localhost:8003 \\
+Alertes API & http://localhost:8004 \\
+Carte Interactive & http://localhost:8005 \\
+MinIO Console & http://localhost:9001 \\
+GeoServer & http://localhost:8080 \\
+\hline
+\end{tabular}
+\end{center}
+
+% ==================== SECTION 8: QUESTIONS/RÉPONSES ====================
+\section{Questions Fréquentes et Réponses}
+
+\subsection{Questions sur l'Architecture}
+
+\begin{tcolorbox}[colback=blue!5, colframe=aquablue]
+\textbf{Q1: Pourquoi avoir choisi une architecture microservices?}
+
+\textbf{R:} L'architecture microservices offre:
+\begin{itemize}[noitemsep]
+    \item \textbf{Modularité:} Chaque service est indépendant et peut être développé/déployé séparément
+    \item \textbf{Scalabilité:} Possibilité de scaler uniquement les services surchargés
+    \item \textbf{Résilience:} Une panne d'un service n'affecte pas les autres
+    \item \textbf{Polyglottisme:} Choix de la meilleure technologie par service (Node.js pour I/O, Python pour ML)
+    \item \textbf{Travail en équipe:} 3 développeurs travaillent en parallèle
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=blue!5, colframe=aquablue]
+\textbf{Q2: Comment les services communiquent-ils entre eux?}
+
+\textbf{R:} Deux modes de communication:
+\begin{itemize}[noitemsep]
+    \item \textbf{Synchrone (API REST):} Pour requêtes directes (ex: STModel appelle Capteurs pour données)
+    \item \textbf{Asynchrone (Redis Pub/Sub):} Pour événements (ex: STModel publie prédiction, Alertes consomme)
+\end{itemize}
+Avantage: Découplage temporel entre producteur et consommateur de données.
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=blue!5, colframe=aquablue]
+\textbf{Q3: Pourquoi utiliser TimescaleDB plutôt que PostgreSQL classique?}
+
+\textbf{R:} TimescaleDB est optimisé pour les séries temporelles:
+\begin{itemize}[noitemsep]
+    \item \textbf{Hypertables:} Partitionnement automatique par temps
+    \item \textbf{Compression:} Réduction stockage jusqu'à 95\%
+    \item \textbf{Agrégations rapides:} Optimisé pour requêtes temporelles
+    \item \textbf{Rétention:} Politique de suppression automatique des anciennes données
+\end{itemize}
+Idéal pour les mesures IoT à haute fréquence.
+\end{tcolorbox}
+
+\subsection{Questions sur le Machine Learning}
+
+\begin{tcolorbox}[colback=purple!5, colframe=purple!70]
+\textbf{Q4: Pourquoi avoir choisi un modèle LSTM?}
+
+\textbf{R:} Le LSTM (Long Short-Term Memory) est idéal car:
+\begin{itemize}[noitemsep]
+    \item \textbf{Mémoire longue:} Capture les dépendances temporelles sur 14 jours
+    \item \textbf{Séquences:} Conçu pour données ordonnées dans le temps
+    \item \textbf{Oubli sélectif:} Mécanisme de portes (gates) pour retenir l'important
+    \item \textbf{Robustesse:} Résiste au problème du gradient vanishing
+\end{itemize}
+Alternative considérée: GRU (plus simple) ou Transformer (plus puissant mais plus lourd).
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=purple!5, colframe=purple!70]
+\textbf{Q5: Comment interpréter le R² de 0.70?}
+
+\textbf{R:} Le coefficient R² = 0.70 signifie:
+\begin{itemize}[noitemsep]
+    \item Le modèle explique \textbf{70\% de la variance} des données
+    \item 30\% reste inexpliqué (bruit, facteurs non mesurés)
+    \item Pour des données environnementales complexes, c'est un \textbf{bon score}
+    \item Comparaison: R² > 0.6 est considéré acceptable, R² > 0.8 excellent
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=purple!5, colframe=purple!70]
+\textbf{Q6: Pourquoi utiliser 14 jours d'historique?}
+
+\textbf{R:} Choix basé sur:
+\begin{itemize}[noitemsep]
+    \item \textbf{Cycles naturels:} 14 jours captent variations hebdomadaires
+    \item \textbf{Disponibilité satellites:} Revisite Sentinel-2 tous les 5 jours
+    \item \textbf{Compromis:} Assez long pour contexte, assez court pour réactivité
+    \item \textbf{Expérimentation:} Tests avec 7, 14, 21 jours - 14 optimal
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=purple!5, colframe=purple!70]
+\textbf{Q7: Qu'est-ce que la normalisation MinMaxScaler et pourquoi l'utiliser?}
+
+\textbf{R:} MinMaxScaler transforme les données entre 0 et 1:
+$$X_{norm} = \frac{X - X_{min}}{X_{max} - X_{min}}$$
+\begin{itemize}[noitemsep]
+    \item \textbf{Convergence:} Les réseaux de neurones apprennent mieux avec valeurs normalisées
+    \item \textbf{Égalité:} Empêche les features à grande échelle de dominer
+    \item \textbf{Stabilité:} Évite explosion/vanishing des gradients
+\end{itemize}
+Important: Conserver les scalers pour dénormaliser les prédictions!
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=purple!5, colframe=purple!70]
+\textbf{Q8: Quelle est la différence entre MSE, RMSE et MAE?}
+
+\textbf{R:}
+\begin{itemize}[noitemsep]
+    \item \textbf{MSE} (Mean Squared Error): $\frac{1}{n}\sum(y - \hat{y})^2$ - Pénalise fortement grandes erreurs
+    \item \textbf{RMSE} (Root MSE): $\sqrt{MSE}$ - Même unité que les données
+    \item \textbf{MAE} (Mean Absolute Error): $\frac{1}{n}\sum|y - \hat{y}|$ - Robuste aux outliers
+\end{itemize}
+Dans notre cas: RMSE = 0.09 signifie erreur moyenne de 9\% sur score normalisé.
+\end{tcolorbox}
+
+\subsection{Questions sur les Données}
+
+\begin{tcolorbox}[colback=cyan!5, colframe=cyan!70]
+\textbf{Q9: Quels sont les indices satellites calculés et leur signification?}
+
+\textbf{R:}
+\begin{itemize}[noitemsep]
+    \item \textbf{NDWI} (Normalized Difference Water Index):
+    $$NDWI = \frac{Green - NIR}{Green + NIR}$$
+    Valeur > 0 = présence d'eau, < 0 = terre/végétation
+    
+    \item \textbf{Chlorophylle:} Concentration d'algues (mg/m³), indicateur d'eutrophisation
+    
+    \item \textbf{Turbidité:} Clarté de l'eau, affectée par sédiments et pollution
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=cyan!5, colframe=cyan!70]
+\textbf{Q10: Comment sont fusionnées les données capteurs et satellites?}
+
+\textbf{R:} Processus en 4 étapes:
+\begin{enumerate}[noitemsep]
+    \item \textbf{Alignement temporel:} Interpolation pour dates manquantes
+    \item \textbf{Alignement spatial:} Association par coordonnées GPS (rayon 5km)
+    \item \textbf{Jointure:} Fusion sur date + station\_id
+    \item \textbf{Qualité:} Calcul du days\_diff (écart temporel capteur-satellite)
+\end{enumerate}
+Notebook: \texttt{02\_fusion\_optimized.ipynb}
+\end{tcolorbox}
+
+\subsection{Questions sur les Alertes}
+
+\begin{tcolorbox}[colback=red!5, colframe=alertred]
+\textbf{Q11: Comment fonctionne le système d'alertes?}
+
+\textbf{R:} Flux d'alerte:
+\begin{enumerate}[noitemsep]
+    \item STModel publie prédiction sur Redis (canal \texttt{predictions})
+    \item Service Alertes écoute Redis en continu
+    \item Comparaison avec seuils OMS configurés
+    \item Si dépassement: création alerte en base
+    \item Envoi notification (email/SMS) aux destinataires de la zone
+    \item Mise à jour statut (pending → sent → acknowledged)
+\end{enumerate}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=red!5, colframe=alertred]
+\textbf{Q12: Quels types d'alertes sont gérés?}
+
+\textbf{R:} 4 types configurés:
+\begin{center}
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Code} & \textbf{Sévérité} & \textbf{Déclencheur} \\
+\hline
+WATER\_QUALITY\_BAD & High & Score qualité < seuil \\
+PH\_CRITICAL & Critical & pH < 6 ou pH > 9 \\
+POLLUTION\_RISK & Medium & Prédiction pollution \\
+SENSOR\_OFFLINE & Low & Capteur sans données \\
+\hline
+\end{tabular}
+\end{center}
+\end{tcolorbox}
+
+\subsection{Questions Techniques Docker}
+
+\begin{tcolorbox}[colback=gray!10, colframe=gray!50]
+\textbf{Q13: Comment fonctionne Docker Compose dans ce projet?}
+
+\textbf{R:} Docker Compose orchestre 12+ conteneurs:
+\begin{itemize}[noitemsep]
+    \item \textbf{depends\_on:} Définit ordre de démarrage (DB avant services)
+    \item \textbf{networks:} Réseau interne pour communication
+    \item \textbf{volumes:} Persistance données (bases, MinIO)
+    \item \textbf{environment:} Variables de configuration
+    \item \textbf{healthcheck:} Vérification état des services
+\end{itemize}
+Commande: \texttt{docker compose up -d} lance tout.
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=gray!10, colframe=gray!50]
+\textbf{Q14: Comment déboguer un service qui ne démarre pas?}
+
+\textbf{R:} Étapes de diagnostic:
+\begin{lstlisting}[language=bash]
+# 1. Voir logs du service
+docker compose logs -f service_stmodel
+
+# 2. Verifier containers actifs
+docker compose ps
+
+# 3. Entrer dans container
+docker compose exec service_stmodel bash
+
+# 4. Verifier connexion DB
+docker compose exec db_predictions psql -U user -d db
+\end{lstlisting}
+\end{tcolorbox}
+
+\subsection{Questions sur l'Évolution}
+
+\begin{tcolorbox}[colback=green!5, colframe=successgreen]
+\textbf{Q15: Quelles améliorations futures sont prévues?}
+
+\textbf{R:} Roadmap:
+\begin{enumerate}[noitemsep]
+    \item \textbf{Phase 2:} Authentification (JWT, rôles admin/autorité/citoyen)
+    \item \textbf{Phase 3:} Interface citoyens (vue simplifiée, signalements)
+    \item \textbf{Phase 4:} Dashboard avancé (rapports PDF, export Excel)
+    \item \textbf{Phase 5:} PWA mode hors-ligne, notifications push
+    \item \textbf{ML:} Test modèles Transformer, prédictions 72h
+\end{enumerate}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=green!5, colframe=successgreen]
+\textbf{Q16: Comment améliorer le R² du modèle?}
+
+\textbf{R:} Pistes d'amélioration:
+\begin{itemize}[noitemsep]
+    \item \textbf{Plus de données:} Augmenter historique d'entraînement
+    \item \textbf{Features:} Ajouter météo, débit, saison
+    \item \textbf{Architecture:} Tester Transformer, Attention mechanism
+    \item \textbf{Ensemble:} Combiner plusieurs modèles (bagging)
+    \item \textbf{Hyperparamètres:} Optimisation bayésienne
+\end{itemize}
+\end{tcolorbox}
+
+% ==================== SECTION 9: GLOSSAIRE ====================
+\section{Glossaire}
+
+\begin{description}[style=nextline]
+    \item[API REST] Interface de programmation utilisant HTTP (GET, POST, PUT, DELETE)
+    \item[CORS] Cross-Origin Resource Sharing - Politique de sécurité navigateur
+    \item[FastAPI] Framework Python moderne pour APIs (async, validation Pydantic)
+    \item[GeoJSON] Format JSON pour données géographiques
+    \item[Hypertable] Table TimescaleDB partitionnée automatiquement par temps
+    \item[IoT] Internet of Things - Objets connectés (capteurs)
+    \item[LSTM] Long Short-Term Memory - Réseau de neurones récurrent
+    \item[MQTT] Protocole léger de messagerie pour IoT
+    \item[NDWI] Normalized Difference Water Index
+    \item[OMS] Organisation Mondiale de la Santé
+    \item[PostGIS] Extension PostgreSQL pour données géospatiales
+    \item[Redis] Base de données in-memory, cache et pub/sub
+    \item[Sentinel-2] Satellites d'observation terrestre européens
+    \item[TimescaleDB] Extension PostgreSQL pour séries temporelles
+\end{description}
+
+% ==================== CONCLUSION ====================
+\section{Conclusion}
+
+AquaWatch-MS est une plateforme complète de surveillance de la qualité de l'eau combinant:
+\begin{itemize}
+    \item \textbf{IoT:} Collecte temps réel via capteurs
+    \item \textbf{Satellite:} Analyse images Sentinel-2
+    \item \textbf{Machine Learning:} Prédiction LSTM (R² = 0.70)
+    \item \textbf{Alertes:} Notifications automatiques OMS
+    \item \textbf{Cartographie:} Visualisation interactive
+\end{itemize}
+
+L'architecture microservices permet une évolution modulaire et un travail d'équipe efficace. Le projet démontre l'intégration réussie de technologies modernes (Docker, FastAPI, PyTorch, PostGIS) pour résoudre un problème environnemental concret.
+
+\vspace{1cm}
+\begin{center}
+\textit{Document préparé pour révision - Décembre 2025}
+\end{center}
+
+\end{document}

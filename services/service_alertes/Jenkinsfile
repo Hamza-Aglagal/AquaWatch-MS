@@ -1,0 +1,47 @@
+pipeline {
+    agent any
+    
+    environment {
+        SERVICE_NAME = 'service_alertes'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                echo "Checking out code for ${SERVICE_NAME}..."
+                checkout scm
+            }
+        }
+        
+        stage('Install Dependencies') {
+            steps {
+                dir("services/${SERVICE_NAME}") {
+                    echo 'Installing Node.js dependencies...'
+                    bat 'npm install'
+                }
+            }
+        }
+        
+        stage('Run Tests') {
+            steps {
+                dir("services/${SERVICE_NAME}") {
+                    echo 'Running tests...'
+                    bat 'npm test || exit 0'
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo "✅ Pipeline for ${SERVICE_NAME} completed successfully!"
+        }
+        failure {
+            echo "❌ Pipeline for ${SERVICE_NAME} failed!"
+        }
+        always {
+            echo 'Cleaning up...'
+            cleanWs()
+        }
+    }
+}

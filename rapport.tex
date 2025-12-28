@@ -1,0 +1,1011 @@
+%===============================================================================
+% RAPPORT DE PROJET - AQUAWATCH-MS
+% Surveillance et Prédiction de la Qualité de l'Eau
+% École Marocaine des Sciences de l'Ingénieur (EMSI) - 2025
+%===============================================================================
+
+\documentclass[12pt,a4paper]{report}
+
+%-------------------------------------------------------------------------------
+% PACKAGES
+%-------------------------------------------------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{tcolorbox}
+\usepackage{fontawesome5}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{colortbl}
+\usepackage{tabularx}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{pifont}
+\usepackage{soul}
+\usepackage{lipsum}
+\usepackage{setspace}
+\usepackage{etoolbox}
+\usepackage{titletoc}
+
+% Chemin des images
+\graphicspath{{images/}}
+
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc, shadows, decorations.pathmorphing, fit}
+\tcbuselibrary{skins, breakable}
+
+%-------------------------------------------------------------------------------
+% COULEURS PERSONNALISÉES - Palette Professionnelle Minimaliste
+%-------------------------------------------------------------------------------
+\definecolor{primaryBlue}{HTML}{1A365D}    % Bleu foncé principal
+\definecolor{secondaryBlue}{HTML}{2B6CB0}  % Bleu secondaire
+\definecolor{lightBlue}{HTML}{EBF8FF}      % Bleu très clair (fond)
+\definecolor{darkGray}{HTML}{2D3748}       % Gris foncé (texte)
+\definecolor{mediumGray}{HTML}{718096}     % Gris moyen
+\definecolor{lightGray}{HTML}{E2E8F0}      % Gris clair (bordures)
+\definecolor{white}{HTML}{FFFFFF}          % Blanc
+
+%-------------------------------------------------------------------------------
+% MISE EN PAGE
+%-------------------------------------------------------------------------------
+\geometry{
+    top=2.5cm,
+    bottom=2.5cm,
+    left=2.5cm,
+    right=2.5cm,
+    headheight=15pt
+}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.8em}
+\onehalfspacing
+
+%-------------------------------------------------------------------------------
+% EN-TÊTES ET PIEDS DE PAGE
+%-------------------------------------------------------------------------------
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{mediumGray}{\leftmark}}
+\fancyhead[R]{\small\textcolor{mediumGray}{AquaWatch-MS}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{lightGray}\leaders\hrule height \headrulewidth\hfill}}
+
+%-------------------------------------------------------------------------------
+% STYLE DES TITRES
+%-------------------------------------------------------------------------------
+\titleformat{\chapter}[display]
+{\normalfont\huge\bfseries\color{primaryBlue}}
+{\chaptertitlename\ \thechapter}
+{20pt}
+{\Huge}
+[\vspace{-10pt}{\color{lightGray}\rule{\textwidth}{1pt}}]
+
+\titleformat{\section}
+{\normalfont\Large\bfseries\color{primaryBlue}}
+{\thesection}
+{10pt}
+{}
+
+\titleformat{\subsection}
+{\normalfont\large\bfseries\color{secondaryBlue}}
+{\thesubsection}
+{8pt}
+{}
+
+%-------------------------------------------------------------------------------
+% BOÎTES PERSONNALISÉES
+%-------------------------------------------------------------------------------
+\newtcolorbox{infobox}[1][]{
+    enhanced,
+    colback=lightBlue,
+    colframe=secondaryBlue,
+    fonttitle=\bfseries,
+    title=#1,
+    attach boxed title to top left={yshift=-2mm, xshift=5mm},
+    boxed title style={colback=secondaryBlue, colframe=secondaryBlue},
+    rounded corners
+}
+
+\newtcolorbox{importantbox}[1][]{
+    enhanced,
+    colback=lightGray!30,
+    colframe=primaryBlue,
+    fonttitle=\bfseries,
+    title=#1,
+    attach boxed title to top left={yshift=-2mm, xshift=5mm},
+    boxed title style={colback=primaryBlue, colframe=primaryBlue},
+    rounded corners
+}
+
+\newtcolorbox{codebox}{
+    enhanced,
+    colback=lightGray!30,
+    colframe=mediumGray,
+    fontupper=\ttfamily\small,
+    rounded corners,
+    left=5pt, right=5pt, top=5pt, bottom=5pt
+}
+
+%-------------------------------------------------------------------------------
+% STYLE DU CODE
+%-------------------------------------------------------------------------------
+\lstset{
+    backgroundcolor=\color{lightGray!30},
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{primaryBlue}\bfseries,
+    stringstyle=\color{secondaryBlue},
+    commentstyle=\color{mediumGray}\itshape,
+    numbers=left,
+    numberstyle=\tiny\color{mediumGray},
+    numbersep=8pt,
+    frame=single,
+    frameround=tttt,
+    rulecolor=\color{lightGray},
+    breaklines=true,
+    showstringspaces=false,
+    tabsize=2
+}
+
+%-------------------------------------------------------------------------------
+% HYPERLIENS
+%-------------------------------------------------------------------------------
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primaryBlue,
+    urlcolor=secondaryBlue,
+    citecolor=secondaryBlue,
+    pdfauthor={Équipe AquaWatch},
+    pdftitle={Rapport AquaWatch-MS},
+    pdfsubject={Surveillance Qualité Eau}
+}
+
+%===============================================================================
+% DÉBUT DU DOCUMENT
+%===============================================================================
+\begin{document}
+
+%-------------------------------------------------------------------------------
+% PAGE DE GARDE PROFESSIONNELLE
+%-------------------------------------------------------------------------------
+\begin{titlepage}
+\begin{tikzpicture}[remember picture, overlay]
+    % Fond blanc
+    \fill[white] (current page.south west) rectangle (current page.north east);
+    
+    % Bande supérieure avec dégradé
+    \shade[top color=primaryBlue, bottom color=secondaryBlue] 
+        (current page.north west) rectangle ([yshift=-5cm]current page.north east);
+    
+    % Motif géométrique décoratif
+    \foreach \i in {0,1,2,3,4,5,6,7,8,9,10} {
+        \draw[white, opacity=0.1, line width=1pt] 
+            ([xshift=\i*2cm, yshift=-5cm]current page.north west) -- 
+            ([xshift=\i*2cm+3cm]current page.north west);
+    }
+    
+    % Ligne décorative
+    \draw[secondaryBlue!60!white, line width=3pt] 
+        ([yshift=-5cm]current page.north west) -- ([yshift=-5cm]current page.north east);
+    
+    % Élément décoratif en bas à gauche
+    \fill[primaryBlue!8] 
+        ([yshift=2cm]current page.south west) -- 
+        ([yshift=2cm, xshift=6cm]current page.south west) -- 
+        ([xshift=3cm]current page.south west) -- 
+        (current page.south west) -- cycle;
+    
+    % Élément décoratif en bas à droite
+    \fill[secondaryBlue!10] 
+        ([yshift=1.5cm]current page.south east) -- 
+        ([yshift=1.5cm, xshift=-5cm]current page.south east) -- 
+        ([xshift=-2cm]current page.south east) -- 
+        (current page.south east) -- cycle;
+\end{tikzpicture}
+
+\begin{center}
+    \vspace*{0.3cm}
+    
+    % En-tête institutionnel
+    {\color{white}\fontsize{13}{15}\selectfont\scshape École Marocaine des Sciences de l'Ingénieur}
+    
+    \vspace{0.2cm}
+    
+    {\color{white!85}\small\faIcon{graduation-cap} \hspace{0.2cm} EMSI \hspace{0.2cm} \faIcon{graduation-cap}}
+    
+    \vspace{2.5cm}
+    
+    % Type de projet
+    {\color{mediumGray}\fontsize{10}{12}\selectfont\textsc{Projet de Fin de Module}}\\[0.3cm]
+    {\color{secondaryBlue}\small\bfseries Machine Learning \textbullet{} Data Mining \textbullet{} Microservices}
+    
+    \vspace{1cm}
+    
+    % Ligne décorative
+    {\color{secondaryBlue}\rule{2.5cm}{1.5pt}}
+    
+    \vspace{0.8cm}
+    
+    % Titre principal
+    {\fontsize{38}{46}\selectfont\bfseries\textcolor{primaryBlue}{AquaWatch-MS}}
+    
+    \vspace{0.6cm}
+    
+    % Sous-titre
+    {\fontsize{14}{18}\selectfont\textcolor{darkGray}{Plateforme de Surveillance et Prédiction}}\\[0.3cm]
+    {\fontsize{14}{18}\selectfont\textcolor{darkGray}{de la Qualité de l'Eau}}
+    
+    \vspace{0.6cm}
+    
+    % Ligne décorative
+    {\color{secondaryBlue}\rule{2.5cm}{1.5pt}}
+    
+    \vspace{1.5cm}
+    
+    % Section Réalisé par
+    {\color{primaryBlue}\small\textsc{Réalisé par}}
+    
+    \vspace{0.5cm}
+    
+    % Équipe avec design élégant
+    \begin{tikzpicture}
+        \node[
+            rounded corners=6pt, 
+            draw=lightGray, 
+            line width=0.8pt,
+            inner sep=12pt, 
+            fill=lightBlue!20,
+            text=darkGray
+        ] {
+            \begin{tabular}{c}
+                {\normalsize\bfseries Bilal El Khantouri}\\[0.3cm]
+                {\normalsize\bfseries Mohamed Yacine Ouhadi}\\[0.3cm]
+                {\normalsize\bfseries Hamza Aglagal}
+            \end{tabular}
+        };
+    \end{tikzpicture}
+    
+    \vspace{1cm}
+    
+    % Année universitaire
+    {\color{mediumGray}\small\faIcon{calendar-alt} \hspace{0.2cm} Année Universitaire 2024-2025}
+    
+\end{center}
+\end{titlepage}
+
+%-------------------------------------------------------------------------------
+% TABLE DES MATIÈRES
+%-------------------------------------------------------------------------------
+\tableofcontents
+\thispagestyle{empty}
+\newpage
+
+%===============================================================================
+% CHAPITRE 1 : INTRODUCTION
+%===============================================================================
+\chapter{Introduction}
+
+\section{Contexte du projet}
+
+L'eau, c'est la vie. On l'entend souvent, mais quand on commence à creuser le sujet, on réalise à quel point c'est vrai. Au Maroc, comme dans beaucoup de pays, la qualité de l'eau reste un défi majeur. Entre les rejets industriels, l'agriculture intensive et l'urbanisation galopante, nos ressources hydriques sont sous pression constante.
+
+\begin{importantbox}[Le constat]
+Aujourd'hui, la surveillance de la qualité de l'eau repose encore largement sur des prélèvements manuels et des analyses en laboratoire. C'est long, c'est coûteux, et surtout, quand les résultats arrivent, il est parfois déjà trop tard pour réagir.
+\end{importantbox}
+
+On s'est posé une question simple : \textbf{et si on pouvait savoir en temps réel ce qui se passe dans nos cours d'eau ?} Mieux encore, et si on pouvait \textit{prédire} les problèmes avant qu'ils ne surviennent ?
+
+C'est de là qu'est née l'idée d'AquaWatch-MS.
+
+\section{Problématique}
+
+Les défis sont nombreux quand on parle de surveillance de l'eau :
+
+\begin{itemize}[leftmargin=2cm]
+    \item Les capteurs coûtent cher et leur maintenance est complexe
+    \item Les données satellites sont sous-exploitées
+    \item Il n'existe pas de système unifié pour croiser toutes ces informations
+    \item Les alertes arrivent souvent après les faits
+\end{itemize}
+
+\vspace{0.5cm}
+
+Notre question de recherche est donc la suivante :
+
+\begin{infobox}[Question centrale]
+Comment concevoir une plateforme modulaire capable d'intégrer données IoT et satellitaires pour surveiller et \textbf{prédire} la qualité de l'eau en temps réel, tout en restant accessible et évolutive ?
+\end{infobox}
+
+\section{Objectifs du projet}
+
+Voici les objectifs que nous avons fixés pour ce projet :
+
+\begin{infobox}[Nos objectifs]
+\begin{enumerate}
+    \item \textbf{Collecter} les données en temps réel via des capteurs IoT
+    \item \textbf{Intégrer} les images satellites (Sentinel-2, Copernicus)
+    \item \textbf{Prédire} la qualité de l'eau grâce au Machine Learning
+    \item \textbf{Alerter} automatiquement en cas de dépassement des seuils
+    \item \textbf{Visualiser} tout ça sur une carte interactive
+\end{enumerate}
+\end{infobox}
+
+%===============================================================================
+% CHAPITRE 2 : ÉTAT DE L'ART
+%===============================================================================
+\chapter{État de l'Art}
+
+\section{Technologies de surveillance de l'eau}
+
+Avant de se lancer dans le développement, nous avons analysé les technologies existantes dans le domaine de la surveillance de la qualité de l'eau.
+
+\subsection{Les capteurs IoT}
+
+Les capteurs de qualité d'eau ont beaucoup évolué ces dernières années. On trouve maintenant des sondes multiparamètres capables de mesurer simultanément :
+
+\begin{center}
+\begin{tabular}{l l l}
+    \toprule
+    \rowcolor{primaryBlue}
+    \textcolor{white}{\textbf{Paramètre}} & \textcolor{white}{\textbf{Plage}} & \textcolor{white}{\textbf{Seuil OMS}} \\
+    \midrule
+    pH & 0 - 14 & 6.5 - 8.5 \\
+    \rowcolor{lightGray!30}
+    Température & -10°C - 50°C & < 25°C \\
+    Turbidité & 0 - 1000 NTU & < 4 NTU \\
+    \rowcolor{lightGray!30}
+    Oxygène dissous & 0 - 20 mg/L & > 5 mg/L \\
+    Conductivité & 0 - 2000 µS/cm & Variable \\
+    \bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Imagerie satellite}
+
+Le programme Sentinel-2 de l'ESA offre des images gratuites avec une résolution de 10 mètres. On peut en extraire :
+
+\begin{itemize}
+    \item Le \textbf{NDWI} (Normalized Difference Water Index) pour détecter l'eau
+    \item L'indice de \textbf{chlorophylle} pour mesurer les algues
+    \item La \textbf{turbidité} estimée depuis l'espace
+\end{itemize}
+
+\section{Architecture microservices}
+
+On a choisi l'architecture microservices pour plusieurs raisons :
+
+\begin{infobox}[Pourquoi les microservices ?]
+\begin{itemize}
+    \item Chaque composant peut être développé et déployé indépendamment
+    \item Si un service plante, les autres continuent de fonctionner
+    \item On peut scaler uniquement les parties qui en ont besoin
+    \item C'est plus facile à maintenir sur le long terme
+\end{itemize}
+\end{infobox}
+
+\section{Machine Learning pour la qualité de l'eau}
+
+Pour la prédiction, les réseaux de neurones récurrents (RNN) et particulièrement les LSTM (Long Short-Term Memory) se sont révélés particulièrement adaptés. La qualité de l'eau est une série temporelle où ce qui s'est passé hier influence ce qui se passe aujourd'hui. Les LSTM sont conçus pour capturer ces dépendances temporelles.
+
+%===============================================================================
+% CHAPITRE 3 : ARCHITECTURE
+%===============================================================================
+\chapter{Architecture du Système}
+
+\section{Vue d'ensemble}
+
+AquaWatch-MS est basé sur une architecture microservices composée de 5 services indépendants communicant entre eux via des APIs REST (synchrone) et Redis Pub/Sub (asynchrone).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{architecture_vue_ensemble.png}
+    \caption{Architecture globale du système AquaWatch-MS}
+    \label{fig:architecture}
+\end{figure}
+
+\section{Rôle de chaque microservice}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{l X}
+    \toprule
+    \rowcolor{primaryBlue}
+    \textcolor{white}{\textbf{Service}} & \textcolor{white}{\textbf{Rôle}} \\
+    \midrule
+    \textbf{Service Capteurs} & Collecte et stocke les données en temps réel provenant des capteurs IoT (pH, température, turbidité, oxygène dissous, conductivité). \\
+    \rowcolor{lightGray!30}
+    \textbf{Service Satellite} & Récupère et traite les images satellites Sentinel-2 pour extraire les indices de qualité d'eau (NDWI, chlorophylle, turbidité). \\
+    \textbf{Service STModel} & Effectue les prédictions de qualité d'eau en utilisant un modèle LSTM entraîné sur les données historiques. \\
+    \rowcolor{lightGray!30}
+    \textbf{Service Alertes} & Surveille les prédictions et déclenche des alertes (email, notifications) lorsque les seuils sont dépassés. \\
+    \textbf{Service API-SIG} & Fournit une interface cartographique pour visualiser les données géospatiales et les zones de qualité d'eau. \\
+    \bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Technologies utilisées par microservice}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{l l l X}
+    \toprule
+    \rowcolor{primaryBlue}
+    \textcolor{white}{\textbf{Service}} & \textcolor{white}{\textbf{Langage}} & \textcolor{white}{\textbf{Framework}} & \textcolor{white}{\textbf{Librairies principales}} \\
+    \midrule
+    Capteurs & Node.js & Express & Sequelize, MQTT.js, ioredis \\
+    \rowcolor{lightGray!30}
+    Satellite & Python & FastAPI & GDAL, Rasterio, NumPy \\
+    STModel & Python & FastAPI & PyTorch, SQLAlchemy, Pandas \\
+    \rowcolor{lightGray!30}
+    Alertes & Node.js & Express & Nodemailer, ioredis \\
+    API-SIG & Node.js & Express & Sequelize, GeoJSON, Leaflet.js \\
+    \bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Base de données associée à chaque microservice}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{l l X}
+    \toprule
+    \rowcolor{primaryBlue}
+    \textcolor{white}{\textbf{Service}} & \textcolor{white}{\textbf{Base de données}} & \textcolor{white}{\textbf{Justification}} \\
+    \midrule
+    Capteurs & TimescaleDB & Optimisé pour les séries temporelles avec hypertables \\
+    \rowcolor{lightGray!30}
+    Satellite & MongoDB + MinIO & Documents flexibles pour métadonnées + stockage fichiers \\
+    STModel & PostgreSQL & Stockage des prédictions et métadonnées du modèle \\
+    \rowcolor{lightGray!30}
+    Alertes & PostgreSQL & Historique des alertes et configurations \\
+    API-SIG & PostGIS & Extension spatiale pour les requêtes géographiques \\
+    \bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Communication entre microservices}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{l l l X}
+    \toprule
+    \rowcolor{primaryBlue}
+    \textcolor{white}{\textbf{Type}} & \textcolor{white}{\textbf{Mode}} & \textcolor{white}{\textbf{Outil}} & \textcolor{white}{\textbf{Usage}} \\
+    \midrule
+    Synchrone & Requête/Réponse & REST API (HTTP) & STModel récupère les données de Capteurs et Satellite \\
+    \rowcolor{lightGray!30}
+    Asynchrone & Pub/Sub & Redis & Publication des prédictions vers Alertes et API-SIG \\
+    \bottomrule
+\end{tabularx}
+\end{center}
+
+%===============================================================================
+% CHAPITRE 4 : PROCESSUS MÉTIERS (BPMN)
+%===============================================================================
+\chapter{Processus Métiers (BPMN)}
+
+Cette section présente les diagrammes BPMN décrivant les processus métiers de chaque microservice.
+
+\section{BPMN Général du Système}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{BPMN_General_du_Systeme.png}
+    \caption{Diagramme BPMN général du système AquaWatch-MS}
+    \label{fig:bpmn-general}
+\end{figure}
+
+\section{Service Capteurs - Processus de collecte}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{BPMN Service Capteurs.png}
+    \caption{Diagramme BPMN du Service Capteurs}
+    \label{fig:bpmn-capteurs}
+\end{figure}
+
+\textbf{Description du processus :}
+\begin{enumerate}
+    \item Le service écoute les messages MQTT envoyés par les capteurs IoT
+    \item Chaque message est validé (format, plage de valeurs, timestamp)
+    \item Si valide, les données sont stockées dans TimescaleDB avec compression automatique
+    \item Les nouvelles données sont publiées sur Redis pour notification aux autres services
+    \item En cas d'erreur, un log est généré et le processus reprend
+\end{enumerate}
+
+\section{Service Satellite - Processus de traitement}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{BPMN_Service_Satellite.png}
+    \caption{Diagramme BPMN du Service Satellite}
+    \label{fig:bpmn-satellite}
+\end{figure}
+
+\textbf{Description du processus :}
+\begin{enumerate}
+    \item Une requête est envoyée à l'API Copernicus pour récupérer les images Sentinel-2
+    \item L'image satellite est téléchargée et stockée dans MinIO (stockage objet)
+    \item Les bandes spectrales sont extraites pour calculer le NDWI
+    \item L'indice de chlorophylle est calculé à partir des bandes appropriées
+    \item Les métadonnées et indices sont sauvegardés dans MongoDB
+\end{enumerate}
+
+\section{Service STModel - Processus de prédiction}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{BPMN Service STModel (ML).png}
+    \caption{Diagramme BPMN du Service STModel (Machine Learning)}
+    \label{fig:bpmn-stmodel}
+\end{figure}
+
+\textbf{Description du processus :}
+\begin{enumerate}
+    \item Récupération des données capteurs des 14 derniers jours via l'API REST
+    \item Fusion avec les indices satellites correspondants
+    \item Prétraitement : normalisation, création des séquences temporelles
+    \item Le modèle LSTM effectue l'inférence et génère un score de qualité (0-10)
+    \item La prédiction est stockée dans PostgreSQL avec intervalle de confiance
+    \item Publication sur Redis pour notifier les services Alertes et API-SIG
+\end{enumerate}
+
+\section{Service Alertes - Processus d'alerte}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{BPMN Service Alertes.png}
+    \caption{Diagramme BPMN du Service Alertes}
+    \label{fig:bpmn-alertes}
+\end{figure}
+
+\textbf{Description du processus :}
+\begin{enumerate}
+    \item Le service écoute le channel Redis pour les nouvelles prédictions
+    \item Chaque prédiction est parsée pour extraire le score et les métadonnées
+    \item Si le score est inférieur au seuil configuré, une alerte est déclenchée
+    \item Un email est envoyé aux destinataires configurés via SMTP
+    \item L'alerte est enregistrée dans l'historique PostgreSQL
+\end{enumerate}
+
+\section{Service API-SIG - Processus de visualisation}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{BPMN Service API-SIG (Cartographie).png}
+    \caption{Diagramme BPMN du Service API-SIG (Cartographie)}
+    \label{fig:bpmn-apisig}
+\end{figure}
+
+\textbf{Description du processus :}
+\begin{enumerate}
+    \item Le client (interface web) envoie une requête pour les données cartographiques
+    \item Une requête spatiale est exécutée sur PostGIS pour récupérer les zones
+    \item Les données sont converties en format GeoJSON
+    \item Les couleurs sont calculées en fonction du score de qualité
+    \item La réponse est renvoyée au client pour affichage sur Leaflet.js
+\end{enumerate}
+
+%===============================================================================
+% CHAPITRE 5 : CONCEPTION DES MICROSERVICES
+%===============================================================================
+\chapter{Conception des Microservices}
+
+Cette section présente les diagrammes de classes et cas d'utilisation pour chaque microservice.
+
+\section{Service Capteurs}
+
+\subsection{Diagramme de classes}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{class_diagram_capteurs.png}
+    \caption{Diagramme de classes du Service Capteurs}
+    \label{fig:class-capteurs}
+\end{figure}
+
+\subsection{Cas d'utilisation}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{usecase_capteurs.png}
+    \caption{Diagramme de cas d'utilisation du Service Capteurs}
+    \label{fig:usecase-capteurs}
+\end{figure}
+
+\section{Service Satellite}
+
+\subsection{Diagramme de classes}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{class_diagram_satellite.png}
+    \caption{Diagramme de classes du Service Satellite}
+    \label{fig:class-satellite}
+\end{figure}
+
+\subsection{Cas d'utilisation}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{usecase_satellite.png}
+    \caption{Diagramme de cas d'utilisation du Service Satellite}
+    \label{fig:usecase-satellite}
+\end{figure}
+
+\section{Service STModel}
+
+\subsection{Diagramme de classes}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{class_diagram_stmodel.png}
+    \caption{Diagramme de classes du Service STModel}
+    \label{fig:class-stmodel}
+\end{figure}
+
+\subsection{Cas d'utilisation}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{usecase_stmodel.png}
+    \caption{Diagramme de cas d'utilisation du Service STModel}
+    \label{fig:usecase-stmodel}
+\end{figure}
+
+\section{Service Alertes}
+
+\subsection{Diagramme de classes}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{class_diagram_alertes.png}
+    \caption{Diagramme de classes du Service Alertes}
+    \label{fig:class-alertes}
+\end{figure}
+
+\subsection{Cas d'utilisation}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{usecase_alertes.png}
+    \caption{Diagramme de cas d'utilisation du Service Alertes}
+    \label{fig:usecase-alertes}
+\end{figure}
+
+\section{Service API-SIG}
+
+\subsection{Diagramme de classes}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{class_diagram_apisig.png}
+    \caption{Diagramme de classes du Service API-SIG}
+    \label{fig:class-apisig}
+\end{figure}
+
+\subsection{Cas d'utilisation}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{usecase_apisig.png}
+    \caption{Diagramme de cas d'utilisation du Service API-SIG}
+    \label{fig:usecase-apisig}
+\end{figure}
+
+%===============================================================================
+% CHAPITRE 6 : MAQUETTES UI/UX
+%===============================================================================
+\chapter{Maquettes UI/UX}
+
+Cette section présente les maquettes de l'interface utilisateur du Service API-SIG, réalisées avec Figma.
+
+\section{Vue principale - Dashboard cartographique}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{mockup_dashboard.png}
+    \caption{Maquette du dashboard cartographique principal}
+    \label{fig:mockup-dashboard}
+\end{figure}
+
+\textbf{Description :} Interface principale avec une carte interactive au centre, des filtres à gauche et des statistiques en temps réel à droite. L'utilisateur peut filtrer par région et par période, visualiser la qualité de l'eau sur la carte avec un code couleur (vert = bonne, jaune = moyenne, rouge = mauvaise), et consulter les statistiques globales.
+
+\section{Vue détaillée - Zone sélectionnée}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\textwidth]{mockup_detail.png}
+    \caption{Maquette de la vue détaillée d'une zone}
+    \label{fig:mockup-detail}
+\end{figure}
+
+\textbf{Description :} Modal affichant les détails d'une zone avec l'historique graphique sur 30 jours, les dernières mesures (pH, température, turbidité) et les prédictions ML avec le score actuel, la prédiction à J+1 et l'indice de confiance.
+
+\section{Vue alertes}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{mockup_alertes.png}
+    \caption{Maquette de la vue de gestion des alertes}
+    \label{fig:mockup-alertes}
+\end{figure}
+
+\textbf{Description :} Interface de gestion des alertes avec filtrage par niveau de criticité, tableau détaillé (date, zone, niveau, message, statut) et fonctionnalité d'export CSV. Les alertes sont classées par criticité (rouge = critique, jaune = moyen) et par statut (en cours, résolu).
+
+\section{Spécifications UI/UX}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{l X}
+    \toprule
+    \rowcolor{primaryBlue}
+    \textcolor{white}{\textbf{Élément}} & \textcolor{white}{\textbf{Spécification}} \\
+    \midrule
+    Palette couleurs & Bleu primaire (\#1A365D), Bleu secondaire (\#2B6CB0), Gris (\#718096) \\
+    \rowcolor{lightGray!30}
+    Typographie & Inter (sans-serif), tailles 12px-24px \\
+    Carte & Leaflet.js avec tuiles OpenStreetMap \\
+    \rowcolor{lightGray!30}
+    Graphiques & Chart.js pour les visualisations temporelles \\
+    Responsive & Design adaptatif (desktop, tablet, mobile) \\
+    \rowcolor{lightGray!30}
+    Accessibilité & Contraste WCAG AA, navigation clavier \\
+    \bottomrule
+\end{tabularx}
+\end{center}
+
+%===============================================================================
+% CHAPITRE 7 : IMPLÉMENTATION
+%===============================================================================
+\chapter{Implémentation}
+
+\section{Environnement de développement}
+
+L'équipe a travaillé sur Windows avec Docker Desktop, permettant un environnement identique et un déploiement facile de tous les services.
+
+\begin{infobox}[Stack technique]
+\begin{itemize}
+    \item \textbf{Conteneurisation} : Docker + Docker Compose
+    \item \textbf{Backend Node.js} : Express, Sequelize, ioredis
+    \item \textbf{Backend Python} : FastAPI, PyTorch, SQLAlchemy
+    \item \textbf{Frontend} : HTML5, Leaflet.js, Chart.js
+    \item \textbf{Bases de données} : PostgreSQL, TimescaleDB, MongoDB, PostGIS
+    \item \textbf{Message Queue} : Redis
+\end{itemize}
+\end{infobox}
+
+\section{Le modèle de Machine Learning}
+
+\subsection{Préparation des données}
+
+Pipeline de préparation des données :
+
+\begin{enumerate}
+    \item \textbf{Nettoyage} des données capteurs (valeurs aberrantes, doublons)
+    \item \textbf{Fusion} avec les indices satellites (interpolation temporelle)
+    \item \textbf{Création des séquences} de 14 jours
+    \item \textbf{Normalisation} avec StandardScaler
+    \item \textbf{Split} train/validation/test (70/15/15)
+\end{enumerate}
+
+\subsection{Architecture LSTM}
+
+\begin{lstlisting}[language=Python, caption=Architecture du modèle]
+class WaterQualityLSTM(nn.Module):
+    def __init__(self, input_size=11, hidden_size=64, num_layers=2):
+        super().__init__()
+        self.lstm = nn.LSTM(
+            input_size=input_size,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            batch_first=True,
+            dropout=0.2
+        )
+        self.fc = nn.Linear(hidden_size, 1)
+    
+    def forward(self, x):
+        lstm_out, _ = self.lstm(x)
+        return self.fc(lstm_out[:, -1, :])
+\end{lstlisting}
+
+\subsection{Résultats}
+
+\begin{center}
+\begin{tabular}{l c c}
+    \toprule
+    \rowcolor{primaryBlue}
+    \textcolor{white}{\textbf{Métrique}} & \textcolor{white}{\textbf{Valeur}} & \textcolor{white}{\textbf{Interprétation}} \\
+    \midrule
+    R² & 0.70 & Bonne corrélation \\
+    \rowcolor{lightGray!30}
+    MAE & 0.054 & Erreur moyenne faible \\
+    RMSE & 0.091 & Écart-type des erreurs \\
+    \bottomrule
+\end{tabular}
+\end{center}
+
+\section{Déploiement avec Docker}
+
+Tous les services tournent dans des conteneurs Docker orchestrés par Docker Compose.
+
+\begin{lstlisting}[language=bash, caption=Lancement des services]
+# Demarrer l'infrastructure
+docker compose up -d db_capteurs db_satellite redis_queue
+
+# Attendre l'initialisation
+sleep 30
+
+# Lancer tous les services
+docker compose up --build
+\end{lstlisting}
+
+%===============================================================================
+% CHAPITRE 8 : RÉSULTATS ET DISCUSSION
+%===============================================================================
+\chapter{Résultats et Discussion}
+
+\section{Fonctionnalités opérationnelles}
+
+Voici les fonctionnalités validées du système :
+
+\begin{infobox}[Fonctionnalités validées]
+\begin{itemize}
+    \item Collecte des données MQTT en temps réel
+    \item Stockage optimisé avec TimescaleDB
+    \item Calcul des indices satellites (NDWI, chlorophylle)
+    \item Prédictions ML avec intervalle de confiance
+    \item Alertes email automatiques
+    \item Carte interactive avec zones colorées
+    \item Communication inter-services via Redis
+\end{itemize}
+\end{infobox}
+
+\section{Démonstration}
+
+Scénario de test du système complet :
+
+\begin{enumerate}
+    \item Un capteur envoie des mesures (pH = 5.2, très acide)
+    \item Le service Capteurs stocke et valide les données
+    \item Le service STModel récupère 14 jours de données
+    \item Le modèle LSTM prédit un score de 2.3/10 (mauvais)
+    \item Redis publie la prédiction
+    \item Le service Alertes détecte le problème
+    \item Un email est envoyé aux responsables
+    \item La carte passe au rouge pour cette zone
+\end{enumerate}
+
+\section{Limites et améliorations}
+
+\begin{importantbox}[Points d'amélioration]
+\begin{itemize}
+    \item Le modèle pourrait être plus précis avec plus de données
+    \item L'interface utilisateur mériterait un design plus poussé
+    \item Il faudrait ajouter l'authentification et la gestion des droits
+    \item Le téléchargement satellite automatique n'est pas encore implémenté
+\end{itemize}
+\end{importantbox}
+
+%===============================================================================
+% CHAPITRE 9 : CONCLUSION
+%===============================================================================
+\chapter{Conclusion}
+
+\section{Bilan du projet}
+
+Ce projet a permis de construire une plateforme complète de surveillance et prédiction de la qualité de l'eau, intégrant du Machine Learning, une architecture microservices, et diverses technologies modernes.
+
+L'importance de la communication et de l'intégration entre les différents services a été un apprentissage clé : chaque composant dépend des autres pour former un système cohérent.
+
+\section{Compétences acquises}
+
+\begin{center}
+\begin{tabular}{l l}
+    \toprule
+    \rowcolor{primaryBlue}
+    \textcolor{white}{\textbf{Domaine}} & \textcolor{white}{\textbf{Technologies}} \\
+    \midrule
+    Conteneurisation & Docker, Docker Compose \\
+    \rowcolor{lightGray!30}
+    Backend & FastAPI, Node.js, Express \\
+    Machine Learning & PyTorch, LSTM, Pandas \\
+    \rowcolor{lightGray!30}
+    Bases de données & PostgreSQL, TimescaleDB, MongoDB, PostGIS \\
+    Communication & REST API, Redis Pub/Sub \\
+    \rowcolor{lightGray!30}
+    SIG & Leaflet.js, GeoJSON, PostGIS \\
+    \bottomrule
+\end{tabular}
+\end{center}
+
+\section{Perspectives}
+
+Améliorations futures envisagées :
+
+\begin{itemize}
+    \item Déploiement sur un cloud (AWS, Azure, ou GCP)
+    \item Création d'une application mobile
+    \item Test d'autres modèles (Transformers, GNN)
+    \item Intégration de plus de sources de données
+    \item Ouverture de la plateforme au public
+\end{itemize}
+
+%===============================================================================
+% ANNEXES
+%===============================================================================
+\appendix
+\chapter{Annexes}
+
+\section{Endpoints API}
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{l l X}
+    \toprule
+    \rowcolor{primaryBlue}
+    \textcolor{white}{\textbf{Service}} & \textcolor{white}{\textbf{Endpoint}} & \textcolor{white}{\textbf{Description}} \\
+    \midrule
+    Capteurs & GET /api/capteurs & Liste tous les capteurs \\
+    \rowcolor{lightGray!30}
+    Capteurs & GET /api/capteurs/data/latest & Dernières mesures \\
+    Capteurs & POST /api/capteurs/mesures & Ajouter une mesure \\
+    \midrule
+    \rowcolor{lightGray!30}
+    Satellite & GET /api/satellite/indices/latest & Derniers indices \\
+    Satellite & GET /api/satellite/images & Liste des images \\
+    \midrule
+    \rowcolor{lightGray!30}
+    STModel & POST /api/predictions/create & Créer prédiction \\
+    STModel & POST /api/predictions/auto & Prédiction automatique \\
+    \rowcolor{lightGray!30}
+    STModel & GET /api/predictions/latest & Dernières prédictions \\
+    \midrule
+    Alertes & GET /api/alerts/history & Historique alertes \\
+    \midrule
+    \rowcolor{lightGray!30}
+    API-SIG & GET /api/map/zones & Zones GeoJSON \\
+    API-SIG & GET /api/map/points & Points d'intérêt \\
+    \bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Variables d'environnement}
+
+\begin{lstlisting}[caption=Fichier .env]
+# Base de donnees Capteurs
+CAPTEURS_DB_USER=capteurs_user
+CAPTEURS_DB_PASSWORD=capteurs_pass
+CAPTEURS_DB_NAME=capteurs_db
+
+# Base de donnees Predictions
+PREDICTIONS_DB_USER=predictions_user
+PREDICTIONS_DB_PASSWORD=predictions_pass_2025
+PREDICTIONS_DB_NAME=predictions_db
+
+# Redis
+REDIS_URL=redis://redis_queue:6379
+
+# Email (Alertes)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+EMAIL_ENABLED=true
+\end{lstlisting}
+
+\section{Références}
+
+\begin{itemize}
+    \item Organisation Mondiale de la Santé - Guidelines for Drinking-water Quality
+    \item Programme Copernicus - Sentinel-2 User Guide
+    \item Docker Documentation - \url{https://docs.docker.com}
+    \item FastAPI Documentation - \url{https://fastapi.tiangolo.com}
+    \item PyTorch LSTM Tutorial - \url{https://pytorch.org/tutorials}
+\end{itemize}
+
+%===============================================================================
+% FIN DU DOCUMENT
+%===============================================================================
+\end{document}

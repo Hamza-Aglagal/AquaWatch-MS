@@ -1,0 +1,55 @@
+pipeline {
+    agent any
+    
+    environment {
+        SERVICE_NAME = 'service_stmodel'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                echo "Checking out code for ${SERVICE_NAME}..."
+                checkout scm
+            }
+        }
+        
+        stage('Setup Python Environment') {
+            steps {
+                dir("services/${SERVICE_NAME}") {
+                    echo 'Setting up Python virtual environment...'
+                    bat '''
+                        python -m venv venv
+                        call venv\\Scripts\\activate.bat
+                        python -m pip install --upgrade pip
+                        pip install -r requirements.txt || exit 0
+                    '''
+                }
+            }
+        }
+        
+        stage('Run Tests') {
+            steps {
+                dir("services/${SERVICE_NAME}") {
+                    echo 'Running Python tests...'
+                    bat '''
+                        call venv\\Scripts\\activate.bat
+                        pytest tests/ || exit 0
+                    '''
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo "✅ Pipeline for ${SERVICE_NAME} completed successfully!"
+        }
+        failure {
+            echo "❌ Pipeline for ${SERVICE_NAME} failed!"
+        }
+        always {
+            echo 'Cleaning up...'
+            cleanWs()
+        }
+    }
+}

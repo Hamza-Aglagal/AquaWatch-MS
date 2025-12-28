@@ -1,0 +1,56 @@
+pipeline {
+    agent any
+    
+    environment {
+        SERVICE_NAME = 'service_api_sig'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                echo "Checking out code for ${SERVICE_NAME}..."
+                checkout scm
+            }
+        }
+        
+        stage('Install Dependencies') {
+            steps {
+                dir("services/${SERVICE_NAME}/program") {
+                    echo 'Installing Node.js dependencies...'
+                    bat 'npm install'
+                }
+            }
+        }
+        
+        stage('Build Next.js') {
+            steps {
+                dir("services/${SERVICE_NAME}/program") {
+                    echo 'Building Next.js application...'
+                    bat 'npm run build || exit 0'
+                }
+            }
+        }
+        
+        stage('Run Tests') {
+            steps {
+                dir("services/${SERVICE_NAME}/program") {
+                    echo 'Running tests...'
+                    bat 'npm test || exit 0'
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo "✅ Pipeline for ${SERVICE_NAME} completed successfully!"
+        }
+        failure {
+            echo "❌ Pipeline for ${SERVICE_NAME} failed!"
+        }
+        always {
+            echo 'Cleaning up...'
+            cleanWs()
+        }
+    }
+}

@@ -1,0 +1,38 @@
+name: SonarCloud Analysis
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  sonarcloud:
+    name: SonarCloud Scan
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        service:
+          - service_capteurs
+          - service_alertes
+          - service_api_sig
+          - service_satellite
+          - service_stmodel
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11  # v4.1.1
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for better analysis
+      
+      - name: SonarCloud Scan - ${{ matrix.service }}
+        uses: SonarSource/sonarcloud-github-action@e44258b109568baa0df60ed515909fc6c72cba92  # v2.3.0
+        with:
+          projectBaseDir: services/${{ matrix.service }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

@@ -1,0 +1,12 @@
+docker-workflow:latest
+git:latest
+nodejs:latest
+sonar:latest
+blueocean:latest
+pipeline-stage-view:latest
+workflow-aggregator:latest
+credentials-binding:latest
+ssh-slaves:latest
+timestamper:latest
+ws-cleanup:latest
+build-timeout:latest

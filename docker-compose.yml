@@ -1,0 +1,250 @@
+services:
+  # BASE DÉDIÉE - Capteurs TimescaleDB (Bilal)
+  db_capteurs:
+    image: timescale/timescaledb:latest-pg14
+    environment:
+      POSTGRES_USER: ${CAPTEURS_DB_USER:-capteurs_user}
+      POSTGRES_PASSWORD: ${CAPTEURS_DB_PASSWORD:-capteurs_pass}
+      POSTGRES_DB: ${CAPTEURS_DB_NAME:-capteurs_db}
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./infrastructure/db_capteurs/data:/var/lib/postgresql/data
+      - ./infrastructure/db_capteurs/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  # BASE DÉDIÉE - Satellite (Bilal)
+  db_satellite:
+    image: mongo:6.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${SATELLITE_DB_USER:-satellite_user}
+      MONGO_INITDB_ROOT_PASSWORD: ${SATELLITE_DB_PASSWORD:-satellite_pass_2025}
+      MONGO_INITDB_DATABASE: ${SATELLITE_DB_NAME:-satellite_db}
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./infrastructure/db_satellite/data:/data/db
+      - ./infrastructure/db_satellite/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+
+  # BASE DÉDIÉE - STModel Predictions (Hamza)
+  db_predictions:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: ${PREDICTIONS_DB_USER}
+      POSTGRES_PASSWORD: ${PREDICTIONS_DB_PASSWORD}
+      POSTGRES_DB: ${PREDICTIONS_DB_NAME}
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./infrastructure/db_predictions/data:/var/lib/postgresql/data
+      - ./infrastructure/db_predictions/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  # BASE DÉDIÉE - Alertes + Cache (Yassin)
+  db_alerts:
+    image: postgres:14
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${ALERTS_DB_USER}
+      POSTGRES_PASSWORD: ${ALERTS_DB_PASSWORD}
+      POSTGRES_DB: ${ALERTS_DB_NAME}
+    ports:
+      - "5435:5432"
+    volumes:
+      - ./infrastructure/db_alerts/data:/var/lib/postgresql/data
+      - ./infrastructure/db_alerts/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  # BASE DÉDIÉE - Géographique (Yassin)
+  db_geo:
+    image: postgis/postgis:14-3.2
+    environment:
+      POSTGRES_USER: ${GEO_DB_USER}
+      POSTGRES_PASSWORD: ${GEO_DB_PASSWORD}
+      POSTGRES_DB: ${GEO_DB_NAME}
+    ports:
+      - "5436:5432"
+    volumes:
+      - ./infrastructure/db_geo/data:/var/lib/postgresql/data
+      - ./infrastructure/db_geo/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  # MESSAGE QUEUE - Redis
+  redis_queue:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./infrastructure/redis/data:/data
+
+  # Stockage fichiers (MinIO)
+  minio_storage:
+    build: ./infrastructure/minio_storage
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "9000:9000"   # API
+      - "9001:9001"   # Console
+    volumes:
+      - ./infrastructure/minio_storage/data:/data
+
+  # Serveur cartographique GeoServer (CONFORMITÉ FICHE)
+  geoserver:
+    image: kartoza/geoserver:2.22.0
+    environment:
+      GEOSERVER_DATA_DIR: /opt/geoserver/data_dir
+      GEOSERVER_ADMIN_USER: ${GEOSERVER_ADMIN_USER:-admin}
+      GEOSERVER_ADMIN_PASSWORD: ${GEOSERVER_ADMIN_PASSWORD:-aquawatch123}
+      INITIAL_MEMORY: 2G
+      MAXIMUM_MEMORY: 4G
+    ports:
+      - "8090:8080"
+    depends_on:
+      - db_geo
+    volumes:
+      - ./infrastructure/geoserver/data:/opt/geoserver/data_dir
+
+  # Service Capteurs (Bilal)
+  service_capteurs:
+    build: ./services/service_capteurs
+    depends_on:
+      - db_capteurs
+      - redis_queue
+    environment:
+      - PORT=8000
+      - DB_HOST=db_capteurs
+      - DB_PORT=5432
+      - DB_NAME=${CAPTEURS_DB_NAME:-capteurs_db}
+      - DB_USER=${CAPTEURS_DB_USER:-capteurs_user}
+      - DB_PASSWORD=${CAPTEURS_DB_PASSWORD:-capteurs_pass}
+      - DATABASE_URL=postgresql://${CAPTEURS_DB_USER}:${CAPTEURS_DB_PASSWORD}@db_capteurs:5432/${CAPTEURS_DB_NAME}
+      - REDIS_URL=redis://redis_queue:6379
+      - ENABLE_SIMULATOR=false
+      - MQTT_BROKER_URL=mqtt://test.mosquitto.org:1883
+      - MQTT_USERNAME=${MQTT_USERNAME:-}
+      - MQTT_PASSWORD=${MQTT_PASSWORD:-}
+      - MQTT_TOPIC=${MQTT_TOPIC:-aquawatch/capteur/+/data}
+    ports:
+      - "8001:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Service Satellite (Bilal)
+  service_satellite:
+    build: ./services/service_satellite
+    depends_on:
+      - db_satellite
+      - minio_storage
+      - redis_queue
+    environment:
+      - MONGODB_URL=mongodb://${SATELLITE_DB_USER}:${SATELLITE_DB_PASSWORD}@db_satellite:27017/${SATELLITE_DB_NAME}?authSource=admin
+      - MINIO_URL=http://minio_storage:9000
+      - REDIS_URL=redis://redis_queue:6379
+    ports:
+      - "8002:8000"
+
+  # Service STModel (Hamza)
+  service_stmodel:
+    build: ./services/service_stmodel
+    depends_on:
+      - db_predictions
+      - redis_queue
+    environment:
+      - DATABASE_URL=postgresql://${PREDICTIONS_DB_USER}:${PREDICTIONS_DB_PASSWORD}@db_predictions:5432/${PREDICTIONS_DB_NAME}
+      - REDIS_URL=redis://redis_queue:6379
+      - CAPTEURS_API_URL=http://service_capteurs:8000
+      - SATELLITE_API_URL=http://service_satellite:8000
+    ports:
+      - "8003:8000"
+
+  # Service Alertes (Yassin)
+  service_alertes:
+    build: ./services/service_alertes
+    env_file:
+      - .env
+      - .env.alertes
+    depends_on:
+      - db_alerts
+      - redis_queue
+    environment:
+      - DATABASE_URL=postgresql://${ALERTS_DB_USER}:${ALERTS_DB_PASSWORD}@db_alerts:5432/${ALERTS_DB_NAME}
+      - REDIS_URL=redis://redis_queue:6379
+    ports:
+      - "8004:8000"
+
+  # Service API-SIG (Yassin)
+  service_api_sig:
+    build: ./services/service_api_sig
+    depends_on:
+      - db_geo
+      - redis_queue
+    environment:
+      - DB_NAME=${GEO_DB_NAME}
+      - DB_USER=${GEO_DB_USER}
+      - DB_PASSWORD=${GEO_DB_PASSWORD}
+      - DB_HOST=db_geo
+      - DB_PORT=5432
+      - DATABASE_URL=postgresql://${GEO_DB_USER}:${GEO_DB_PASSWORD}@db_geo:5432/${GEO_DB_NAME}
+      - REDIS_URL=redis://redis_queue:6379
+      - CAPTEUR_API_URL=http://service_capteurs:8000
+      - STMODEL_API_URL=http://service_stmodel:8000
+    ports:
+      - "8005:8000"
+
+  # BASE DÉDIÉE - SonarQube
+  sonarqube_db:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: ${SONARQUBE_DB_USER:-sonar}
+      POSTGRES_PASSWORD: ${SONARQUBE_DB_PASSWORD:-sonar_pass}
+      POSTGRES_DB: ${SONARQUBE_DB_NAME:-sonarqube}
+    ports:
+      - "5437:5432"
+    volumes:
+      - ./infrastructure/sonarqube/data/db:/var/lib/postgresql/data
+      - ./infrastructure/sonarqube/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SONARQUBE_DB_USER:-sonar} -d ${SONARQUBE_DB_NAME:-sonarqube}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - default
+
+  # ANALYSE DE CODE - SonarQube
+  sonarqube:
+    image: sonarqube:lts-community
+    depends_on:
+      sonarqube_db:
+        condition: service_healthy
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://sonarqube_db:5432/${SONARQUBE_DB_NAME:-sonarqube}
+      SONAR_JDBC_USERNAME: ${SONARQUBE_DB_USER:-sonar}
+      SONAR_JDBC_PASSWORD: ${SONARQUBE_DB_PASSWORD:-sonar_pass}
+    ports:
+      - "9090:9000"
+    volumes:
+      - ./infrastructure/sonarqube/data/sonarqube_data:/opt/sonarqube/data
+      - ./infrastructure/sonarqube/data/sonarqube_extensions:/opt/sonarqube/extensions
+      - ./infrastructure/sonarqube/data/sonarqube_logs:/opt/sonarqube/logs
+    networks:
+      - default
+
+  # CI/CD - Jenkins
+  jenkins:
+    build: ./infrastructure/jenkins
+    environment:
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
+      DOCKER_HOST: "unix:///var/run/docker.sock"
+    ports:
+      - "8080:8080"      # Interface web
+      - "50000:50000"    # Agent port
+    volumes:
+      - ./infrastructure/jenkins/data:/var/jenkins_home
+      - ./infrastructure/jenkins/init-scripts:/usr/share/jenkins/ref/init.groovy.d
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/workspace
+    networks:
+      - default
+    user: root
